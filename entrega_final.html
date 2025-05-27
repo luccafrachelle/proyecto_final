@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.552">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Lucca Frachelle">
+<meta name="dcterms.date" content="2025-05-26">
+
+<title>Análisis Teórico y Aplicación de t-SNE en Visualización de Datos</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="entrega_final_files/libs/clipboard/clipboard.min.js"></script>
+<script src="entrega_final_files/libs/quarto-html/quarto.js"></script>
+<script src="entrega_final_files/libs/quarto-html/popper.min.js"></script>
+<script src="entrega_final_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="entrega_final_files/libs/quarto-html/anchor.min.js"></script>
+<link href="entrega_final_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="entrega_final_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="entrega_final_files/libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="entrega_final_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="entrega_final_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="entrega_final_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="entrega_final_files/libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introducción" id="toc-introducción" class="nav-link active" data-scroll-target="#introducción"><span class="header-section-number">1</span> Introducción</a></li>
+  <li><a href="#fundamentos-teóricos-de-la-reducción-de-dimensionalidad" id="toc-fundamentos-teóricos-de-la-reducción-de-dimensionalidad" class="nav-link" data-scroll-target="#fundamentos-teóricos-de-la-reducción-de-dimensionalidad"><span class="header-section-number">2</span> Fundamentos Teóricos de la Reducción de Dimensionalidad</a>
+  <ul class="collapse">
+  <li><a href="#stochastic-neighbor-embedding-sne---base-de-t-sne" id="toc-stochastic-neighbor-embedding-sne---base-de-t-sne" class="nav-link" data-scroll-target="#stochastic-neighbor-embedding-sne---base-de-t-sne"><span class="header-section-number">2.1</span> Stochastic Neighbor Embedding (SNE) - Base de t-SNE</a>
+  <ul class="collapse">
+  <li><a href="#probabilidades-en-el-espacio-de-alta-dimensión" id="toc-probabilidades-en-el-espacio-de-alta-dimensión" class="nav-link" data-scroll-target="#probabilidades-en-el-espacio-de-alta-dimensión"><span class="header-section-number">2.1.1</span> Probabilidades en el espacio de alta dimensión:</a></li>
+  <li><a href="#probabilidades-en-el-espacio-de-baja-dimensión" id="toc-probabilidades-en-el-espacio-de-baja-dimensión" class="nav-link" data-scroll-target="#probabilidades-en-el-espacio-de-baja-dimensión"><span class="header-section-number">2.1.2</span> Probabilidades en el espacio de baja dimensión:</a></li>
+  <li><a href="#función-de-costo-de-sne" id="toc-función-de-costo-de-sne" class="nav-link" data-scroll-target="#función-de-costo-de-sne"><span class="header-section-number">2.1.3</span> Función de costo de SNE:</a></li>
+  <li><a href="#gradiente-de-la-función-de-costo-de-sne" id="toc-gradiente-de-la-función-de-costo-de-sne" class="nav-link" data-scroll-target="#gradiente-de-la-función-de-costo-de-sne"><span class="header-section-number">2.1.4</span> Gradiente de la función de costo de SNE:</a></li>
+  </ul></li>
+  <li><a href="#t-distributed-stochastic-neighbor-embedding-t-sne" id="toc-t-distributed-stochastic-neighbor-embedding-t-sne" class="nav-link" data-scroll-target="#t-distributed-stochastic-neighbor-embedding-t-sne"><span class="header-section-number">2.2</span> t-Distributed Stochastic Neighbor Embedding (t-SNE)</a>
+  <ul class="collapse">
+  <li><a href="#probabilidades-conjuntas-simétricas-en-alta-dimensión" id="toc-probabilidades-conjuntas-simétricas-en-alta-dimensión" class="nav-link" data-scroll-target="#probabilidades-conjuntas-simétricas-en-alta-dimensión"><span class="header-section-number">2.2.1</span> Probabilidades conjuntas simétricas en alta dimensión:</a></li>
+  <li><a href="#probabilidades-conjuntas-usando-una-distribución-t-de-student-en-baja-dimensión" id="toc-probabilidades-conjuntas-usando-una-distribución-t-de-student-en-baja-dimensión" class="nav-link" data-scroll-target="#probabilidades-conjuntas-usando-una-distribución-t-de-student-en-baja-dimensión"><span class="header-section-number">2.2.2</span> Probabilidades conjuntas usando una distribución t de Student en baja dimensión:</a></li>
+  <li><a href="#función-de-costo-de-t-sne" id="toc-función-de-costo-de-t-sne" class="nav-link" data-scroll-target="#función-de-costo-de-t-sne"><span class="header-section-number">2.2.3</span> Función de costo de t-SNE:</a></li>
+  <li><a href="#gradiente-de-la-función-de-costo-de-t-sne" id="toc-gradiente-de-la-función-de-costo-de-t-sne" class="nav-link" data-scroll-target="#gradiente-de-la-función-de-costo-de-t-sne"><span class="header-section-number">2.2.4</span> Gradiente de la función de costo de t-SNE:</a></li>
+  </ul></li>
+  <li><a href="#algoritmo-de-optimización" id="toc-algoritmo-de-optimización" class="nav-link" data-scroll-target="#algoritmo-de-optimización"><span class="header-section-number">2.3</span> Algoritmo de Optimización</a></li>
+  <li><a href="#extensiones-y-variaciones" id="toc-extensiones-y-variaciones" class="nav-link" data-scroll-target="#extensiones-y-variaciones"><span class="header-section-number">2.4</span> Extensiones y Variaciones</a></li>
+  <li><a href="#la-función-softmax-convirtiendo-números-en-probabilidades" id="toc-la-función-softmax-convirtiendo-números-en-probabilidades" class="nav-link" data-scroll-target="#la-función-softmax-convirtiendo-números-en-probabilidades"><span class="header-section-number">2.5</span> La Función Softmax: Convirtiendo Números en Probabilidades</a></li>
+  <li><a href="#la-divergencia-kullback-leibler-kl-midiendo-la-diferencia-entre-distribuciones" id="toc-la-divergencia-kullback-leibler-kl-midiendo-la-diferencia-entre-distribuciones" class="nav-link" data-scroll-target="#la-divergencia-kullback-leibler-kl-midiendo-la-diferencia-entre-distribuciones"><span class="header-section-number">2.6</span> La Divergencia Kullback-Leibler (KL): Midiendo la Diferencia entre Distribuciones</a></li>
+  <li><a href="#uniform-manifold-approximation-and-projection-umap" id="toc-uniform-manifold-approximation-and-projection-umap" class="nav-link" data-scroll-target="#uniform-manifold-approximation-and-projection-umap"><span class="header-section-number">2.7</span> Uniform Manifold Approximation and Projection (UMAP)</a>
+  <ul class="collapse">
+  <li><a href="#fundamentos-matemáticos-de-umap" id="toc-fundamentos-matemáticos-de-umap" class="nav-link" data-scroll-target="#fundamentos-matemáticos-de-umap"><span class="header-section-number">2.7.1</span> Fundamentos Matemáticos de UMAP</a></li>
+  <li><a href="#comparación-de-enfoques-t-sne-vs.-umap-teoría" id="toc-comparación-de-enfoques-t-sne-vs.-umap-teoría" class="nav-link" data-scroll-target="#comparación-de-enfoques-t-sne-vs.-umap-teoría"><span class="header-section-number">2.7.2</span> Comparación de Enfoques: t-SNE vs.&nbsp;UMAP (Teoría)</a></li>
+  <li><a href="#enfoques-distintivos-en-la-práctica" id="toc-enfoques-distintivos-en-la-práctica" class="nav-link" data-scroll-target="#enfoques-distintivos-en-la-práctica"><span class="header-section-number">2.7.3</span> Enfoques Distintivos en la Práctica:</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#implementación-y-análisis-comparativo" id="toc-implementación-y-análisis-comparativo" class="nav-link" data-scroll-target="#implementación-y-análisis-comparativo"><span class="header-section-number">3</span> Implementación y Análisis Comparativo</a>
+  <ul class="collapse">
+  <li><a href="#preparación-del-entorno-y-carga-de-datos" id="toc-preparación-del-entorno-y-carga-de-datos" class="nav-link" data-scroll-target="#preparación-del-entorno-y-carga-de-datos"><span class="header-section-number">3.1</span> Preparación del Entorno y Carga de Datos</a></li>
+  <li><a href="#representación-de-imágenes-como-matrices" id="toc-representación-de-imágenes-como-matrices" class="nav-link" data-scroll-target="#representación-de-imágenes-como-matrices"><span class="header-section-number">3.2</span> Representación de Imágenes como Matrices</a>
+  <ul class="collapse">
+  <li><a href="#imágenes-en-escala-de-grises" id="toc-imágenes-en-escala-de-grises" class="nav-link" data-scroll-target="#imágenes-en-escala-de-grises"><span class="header-section-number">3.2.1</span> Imágenes en Escala de Grises</a></li>
+  <li><a href="#imágenes-a-color-rgb" id="toc-imágenes-a-color-rgb" class="nav-link" data-scroll-target="#imágenes-a-color-rgb"><span class="header-section-number">3.2.2</span> Imágenes a Color (RGB)</a></li>
+  <li><a href="#aplanamiento-flattening-para-algoritmos-lineales" id="toc-aplanamiento-flattening-para-algoritmos-lineales" class="nav-link" data-scroll-target="#aplanamiento-flattening-para-algoritmos-lineales"><span class="header-section-number">3.2.3</span> Aplanamiento (Flattening) para Algoritmos Lineales</a></li>
+  </ul></li>
+  <li><a href="#visualización-tabular-de-los-datos-dataframe" id="toc-visualización-tabular-de-los-datos-dataframe" class="nav-link" data-scroll-target="#visualización-tabular-de-los-datos-dataframe"><span class="header-section-number">3.3</span> Visualización Tabular de los Datos (DataFrame)</a></li>
+  <li><a href="#visualización-de-datos-originales" id="toc-visualización-de-datos-originales" class="nav-link" data-scroll-target="#visualización-de-datos-originales"><span class="header-section-number">3.4</span> Visualización de Datos Originales</a></li>
+  <li><a href="#implementación-y-análisis-de-t-sne" id="toc-implementación-y-análisis-de-t-sne" class="nav-link" data-scroll-target="#implementación-y-análisis-de-t-sne"><span class="header-section-number">3.5</span> Implementación y Análisis de t-SNE</a>
+  <ul class="collapse">
+  <li><a href="#proceso-de-optimización-de-t-sne" id="toc-proceso-de-optimización-de-t-sne" class="nav-link" data-scroll-target="#proceso-de-optimización-de-t-sne"><span class="header-section-number">3.5.1</span> Proceso de Optimización de t-SNE</a></li>
+  <li><a href="#análisis-de-la-convergencia-de-t-sne" id="toc-análisis-de-la-convergencia-de-t-sne" class="nav-link" data-scroll-target="#análisis-de-la-convergencia-de-t-sne"><span class="header-section-number">3.5.2</span> Análisis de la Convergencia de t-SNE</a></li>
+  <li><a href="#efecto-de-los-hiperparámetros-de-t-sne" id="toc-efecto-de-los-hiperparámetros-de-t-sne" class="nav-link" data-scroll-target="#efecto-de-los-hiperparámetros-de-t-sne"><span class="header-section-number">3.5.3</span> Efecto de los Hiperparámetros de t-SNE</a></li>
+  </ul></li>
+  <li><a href="#implementación-y-análisis-de-umap" id="toc-implementación-y-análisis-de-umap" class="nav-link" data-scroll-target="#implementación-y-análisis-de-umap"><span class="header-section-number">3.6</span> Implementación y Análisis de UMAP</a>
+  <ul class="collapse">
+  <li><a href="#efecto-de-los-hiperparámetros-de-umap" id="toc-efecto-de-los-hiperparámetros-de-umap" class="nav-link" data-scroll-target="#efecto-de-los-hiperparámetros-de-umap"><span class="header-section-number">3.6.1</span> Efecto de los Hiperparámetros de UMAP</a></li>
+  </ul></li>
+  <li><a href="#análisis-comparativo-de-las-proyecciones-finales" id="toc-análisis-comparativo-de-las-proyecciones-finales" class="nav-link" data-scroll-target="#análisis-comparativo-de-las-proyecciones-finales"><span class="header-section-number">3.7</span> Análisis Comparativo de las Proyecciones Finales</a></li>
+  </ul></li>
+  <li><a href="#conclusiones" id="toc-conclusiones" class="nav-link" data-scroll-target="#conclusiones"><span class="header-section-number">4</span> Conclusiones</a></li>
+  <li><a href="#referencias" id="toc-referencias" class="nav-link" data-scroll-target="#referencias"><span class="header-section-number">5</span> Referencias</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Análisis Teórico y Aplicación de t-SNE en Visualización de Datos</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Lucca Frachelle </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">May 26, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introducción" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Introducción</h1>
+<p>Este trabajo presenta un análisis detallado de la técnica t-SNE (t-Distributed Stochastic Neighbor Embedding), una herramienta fundamental en la visualización de datos de alta dimensionalidad. El objetivo es proporcionar una comprensión profunda de los fundamentos matemáticos y su aplicación práctica en el análisis de datos.</p>
+</section>
+<section id="fundamentos-teóricos-de-la-reducción-de-dimensionalidad" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Fundamentos Teóricos de la Reducción de Dimensionalidad</h1>
+<p>A continuación, se presenta un resumen de la matemática presente en los algoritmos t-SNE y UMAP, con un enfoque didáctico en las ecuaciones, su interpretación, y explicaciones de conceptos clave como la función Softmax y la Divergencia Kullback-Leibler.</p>
+<section id="stochastic-neighbor-embedding-sne---base-de-t-sne" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="stochastic-neighbor-embedding-sne---base-de-t-sne"><span class="header-section-number">2.1</span> Stochastic Neighbor Embedding (SNE) - Base de t-SNE</h2>
+<p>El t-SNE se basa en el Stochastic Neighbor Embedding (SNE). SNE convierte las distancias euclidianas entre puntos de datos en probabilidades condicionales que representan similitudes.</p>
+<section id="probabilidades-en-el-espacio-de-alta-dimensión" class="level3" data-number="2.1.1">
+<h3 data-number="2.1.1" class="anchored" data-anchor-id="probabilidades-en-el-espacio-de-alta-dimensión"><span class="header-section-number">2.1.1</span> Probabilidades en el espacio de alta dimensión:</h3>
+<p>La probabilidad de que el punto de datos <span class="math inline">\(x_j\)</span> sea un vecino del punto de datos <span class="math inline">\(x_i\)</span> se define como:</p>
+<p><span class="math display">\[p_{j|i} = \frac{\exp(-\|x_i - x_j\|^2 / 2\sigma_i^2)}{\sum_{k \neq i} \exp(-\|x_i - x_k\|^2 / 2\sigma_i^2)}\]</span></p>
+<p>donde: * <span class="math inline">\(x_i\)</span> y <span class="math inline">\(x_j\)</span> son puntos de datos en el espacio de alta dimensión. * <span class="math inline">\(\|x_i - x_j\|^2\)</span> es la distancia euclidiana al cuadrado entre <span class="math inline">\(x_i\)</span> y <span class="math inline">\(x_j\)</span>. * <span class="math inline">\(\sigma_i\)</span> es la desviación estándar de una gaussiana centrada en <span class="math inline">\(x_i\)</span>. Esta <span class="math inline">\(\sigma_i\)</span> se ajusta para que la perplejidad de la distribución de probabilidad condicional sea igual a una perplejidad predefinida por el usuario. La perplejidad se define como: <span class="math display">\[\text{Perp}(P_i) = 2^{H(P_i)}\]</span> donde <span class="math inline">\(H(P_i)\)</span> es la entropía de <span class="math inline">\(P_i\)</span> en bits: <span class="math display">\[H(P_i) = -\sum_j p_{j|i} \log_2 p_{j|i}\]</span></p>
+<p>Es importante notar que <span class="math inline">\(p_{i|i} = 0\)</span>.</p>
+</section>
+<section id="probabilidades-en-el-espacio-de-baja-dimensión" class="level3" data-number="2.1.2">
+<h3 data-number="2.1.2" class="anchored" data-anchor-id="probabilidades-en-el-espacio-de-baja-dimensión"><span class="header-section-number">2.1.2</span> Probabilidades en el espacio de baja dimensión:</h3>
+<p>De manera similar, para los puntos <span class="math inline">\(y_i\)</span> y <span class="math inline">\(y_j\)</span> en el mapa de baja dimensión, se definen las probabilidades condicionales:</p>
+<p><span class="math display">\[q_{j|i} = \frac{\exp(-\|y_i - y_j\|^2)}{\sum_{k \neq i} \exp(-\|y_i - y_k\|^2)}\]</span></p>
+<p>Aquí no se usa la <span class="math inline">\(\sigma_i\)</span> porque se quiere que la escala de las distancias en el mapa sea libremente ajustada por el algoritmo.</p>
+</section>
+<section id="función-de-costo-de-sne" class="level3" data-number="2.1.3">
+<h3 data-number="2.1.3" class="anchored" data-anchor-id="función-de-costo-de-sne"><span class="header-section-number">2.1.3</span> Función de costo de SNE:</h3>
+<p>SNE utiliza una función de costo basada en la divergencia Kullback-Leibler (KL) entre las distribuciones de probabilidad <span class="math inline">\(P_i\)</span> (en alta dimensión) y <span class="math inline">\(Q_i\)</span> (en baja dimensión):</p>
+<p><span class="math display">\[C = \sum_i \text{KL}(P_i || Q_i) = \sum_i \sum_j p_{j|i} \log \frac{p_{j|i}}{q_{j|i}}\]</span></p>
+<p>El objetivo es minimizar esta función de costo con respecto a las coordenadas <span class="math inline">\(y_i\)</span> en el mapa. La minimización se realiza mediante un descenso de gradiente.</p>
+</section>
+<section id="gradiente-de-la-función-de-costo-de-sne" class="level3" data-number="2.1.4">
+<h3 data-number="2.1.4" class="anchored" data-anchor-id="gradiente-de-la-función-de-costo-de-sne"><span class="header-section-number">2.1.4</span> Gradiente de la función de costo de SNE:</h3>
+<p>El gradiente de la función de costo con respecto a <span class="math inline">\(y_i\)</span> es:</p>
+<p><span class="math display">\[\frac{\partial C}{\partial y_i} = \sum_j (p_{j|i} - q_{j|i} + p_{i|j} - q_{i|j})(y_i - y_j)\]</span></p>
+</section>
+</section>
+<section id="t-distributed-stochastic-neighbor-embedding-t-sne" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="t-distributed-stochastic-neighbor-embedding-t-sne"><span class="header-section-number">2.2</span> t-Distributed Stochastic Neighbor Embedding (t-SNE)</h2>
+<p>t-SNE introduce dos mejoras principales sobre SNE:</p>
+<ul>
+<li><strong>Simetría en las probabilidades:</strong> En lugar de probabilidades condicionales asimétricas <span class="math inline">\(p_{j|i}\)</span>, t-SNE utiliza probabilidades conjuntas simétricas <span class="math inline">\(p_{ij}\)</span>.</li>
+<li><strong>Distribución t de Student en baja dimensión:</strong> Reemplaza la distribución gaussiana en el espacio de baja dimensión con una distribución t de Student con un grado de libertad.</li>
+</ul>
+<section id="probabilidades-conjuntas-simétricas-en-alta-dimensión" class="level3" data-number="2.2.1">
+<h3 data-number="2.2.1" class="anchored" data-anchor-id="probabilidades-conjuntas-simétricas-en-alta-dimensión"><span class="header-section-number">2.2.1</span> Probabilidades conjuntas simétricas en alta dimensión:</h3>
+<p>Las probabilidades <span class="math inline">\(p_{ij}\)</span> se calculan como la media de las probabilidades condicionales simetrizadas:</p>
+<p><span class="math display">\[p_{ij} = \frac{p_{j|i} + p_{i|j}}{2N}\]</span></p>
+<p>donde <span class="math inline">\(N\)</span> es el número de puntos de datos. Esto asegura que <span class="math inline">\(\sum_{i \neq j} p_{ij} = 1\)</span>. Una alternativa para calcular <span class="math inline">\(p_{ij}\)</span> es: <span class="math display">\[p_{ij} = \frac{\exp(-\|x_i - x_j\|^2 / 2\sigma^2)}{\sum_{k \neq l} \exp(-\|x_k - x_l\|^2 / 2\sigma^2)}\]</span> La perplejidad se define como para SNE, pero ahora para la distribución simétrica <span class="math inline">\(P_i\)</span>.</p>
+</section>
+<section id="probabilidades-conjuntas-usando-una-distribución-t-de-student-en-baja-dimensión" class="level3" data-number="2.2.2">
+<h3 data-number="2.2.2" class="anchored" data-anchor-id="probabilidades-conjuntas-usando-una-distribución-t-de-student-en-baja-dimensión"><span class="header-section-number">2.2.2</span> Probabilidades conjuntas usando una distribución t de Student en baja dimensión:</h3>
+<p>Las probabilidades <span class="math inline">\(q_{ij}\)</span> en el espacio de baja dimensión se definen utilizando una distribución t de Student con un grado de libertad (que es la distribución de Cauchy):</p>
+<p><span class="math display">\[q_{ij} = \frac{(1 + \|y_i - y_j\|^2)^{-1}}{\sum_{k \neq l} (1 + \|y_k - y_l\|^2)^{-1}}\]</span></p>
+<p>El uso de la distribución t de Student es crucial para t-SNE. La cola pesada de la distribución t de Student permite que las distancias moderadamente grandes en el espacio de alta dimensión se mapeen a distancias mayores en el espacio de baja dimensión. Esto ayuda a resolver el “problema de hacinamiento” (crowding problem) donde los puntos cercanos en alta dimensión tienden a aglomerarse en el centro del mapa de baja dimensión.</p>
+</section>
+<section id="función-de-costo-de-t-sne" class="level3" data-number="2.2.3">
+<h3 data-number="2.2.3" class="anchored" data-anchor-id="función-de-costo-de-t-sne"><span class="header-section-number">2.2.3</span> Función de costo de t-SNE:</h3>
+<p>La función de costo de t-SNE es nuevamente una divergencia KL, pero ahora entre las probabilidades conjuntas <span class="math inline">\(P\)</span> y <span class="math inline">\(Q\)</span>:</p>
+<p><span class="math display">\[C = \text{KL}(P || Q) = \sum_i \sum_j p_{ij} \log \frac{p_{ij}}{q_{ij}}\]</span></p>
+</section>
+<section id="gradiente-de-la-función-de-costo-de-t-sne" class="level3" data-number="2.2.4">
+<h3 data-number="2.2.4" class="anchored" data-anchor-id="gradiente-de-la-función-de-costo-de-t-sne"><span class="header-section-number">2.2.4</span> Gradiente de la función de costo de t-SNE:</h3>
+<p>El gradiente de la función de costo de t-SNE con respecto a <span class="math inline">\(y_i\)</span> es:</p>
+<p><span class="math display">\[\frac{\partial C}{\partial y_i} = 4 \sum_j (p_{ij} - q_{ij})(y_i - y_j)(1 + \|y_i - y_j\|^2)^{-1}\]</span></p>
+<p>Este gradiente tiene una forma intuitiva: es una suma de fuerzas que empujan o tiran de los puntos <span class="math inline">\(y_i\)</span>. * Si <span class="math inline">\(p_{ij} &gt; q_{ij}\)</span>, los puntos <span class="math inline">\(i\)</span> y <span class="math inline">\(j\)</span> están más cerca en el espacio de alta dimensión de lo que están en el mapa. Esto crea una fuerza atractiva (<span class="math inline">\(y_i - y_j\)</span>) que los acerca en el mapa. * Si <span class="math inline">\(p_{ij} &lt; q_{ij}\)</span>, los puntos <span class="math inline">\(i\)</span> y <span class="math inline">\(j\)</span> están más lejos en el espacio de alta dimensión. Esto crea una fuerza repulsiva (que se ve afectada por el término <span class="math inline">\((1 + \|y_i - y_j\|^2)^{-1}\)</span>) que los aleja.</p>
+<p>El término <span class="math inline">\((1 + \|y_i - y_j\|^2)^{-1}\)</span> en el gradiente modera la fuerza de repulsión entre puntos que ya están suficientemente separados en el mapa, lo que es una característica clave para el “deshacinamiento” (uncrowding) y la formación de clústeres bien separados.</p>
+</section>
+</section>
+<section id="algoritmo-de-optimización" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="algoritmo-de-optimización"><span class="header-section-number">2.3</span> Algoritmo de Optimización</h2>
+<p>El algoritmo de t-SNE utiliza un algoritmo de descenso de gradiente para minimizar la función de costo. Se aplican técnicas como:</p>
+<ul>
+<li><strong>Momentum:</strong> Para acelerar la convergencia y evitar mínimos locales. La actualización de las coordenadas <span class="math inline">\(y_i\)</span> en cada iteración <span class="math inline">\(t\)</span> es: <span class="math display">\[
+  Y^{(t)} = Y^{(t-1)} + \eta \frac{\partial C}{\partial Y} + \alpha(t) (Y^{(t-1)} - Y^{(t-2)})
+  \]</span> donde <span class="math inline">\(\eta\)</span> es la tasa de aprendizaje y <span class="math inline">\(\alpha(t)\)</span> es el término de momentum.</li>
+<li><strong>Ajuste del learning rate:</strong> Se suele usar un learning rate que se incrementa en las primeras iteraciones y luego se mantiene constante.</li>
+<li><strong>Inicialización:</strong> Los puntos <span class="math inline">\(y_i\)</span> se inicializan aleatoriamente de una distribución normal con una pequeña varianza.</li>
+</ul>
+</section>
+<section id="extensiones-y-variaciones" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="extensiones-y-variaciones"><span class="header-section-number">2.4</span> Extensiones y Variaciones</h2>
+<p>El artículo también discute extensiones como:</p>
+<ul>
+<li><strong>t-SNE para conjuntos de datos grandes:</strong> Se propone una técnica de random walks en grafos de vecindad para manejar grandes volúmenes de datos, donde solo un subconjunto de puntos se visualiza directamente, pero la estructura global influye en el embedding.</li>
+<li><strong>t-SNE con costos de incrustación tempranos (early exaggeration):</strong> Multiplicar los <span class="math inline">\(p_{ij}\)</span> por un factor (ej. 4 o 12) en las primeras iteraciones para crear clústeres más compactos y evitar que se formen “mini-clústeres” que no se pueden separar más tarde. <span class="math display">\[
+  p'_{ij} = p_{ij} \times \text{exaggeration\_factor}
+  \]</span> para las primeras <span class="math inline">\(T\)</span> iteraciones.</li>
+</ul>
+</section>
+<section id="la-función-softmax-convirtiendo-números-en-probabilidades" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="la-función-softmax-convirtiendo-números-en-probabilidades"><span class="header-section-number">2.5</span> La Función Softmax: Convirtiendo Números en Probabilidades</h2>
+<p>Imagina que estás construyendo un modelo de inteligencia artificial para clasificar imágenes. Quieres que el modelo diga si una imagen es un “gato”, un “perro” o un “pájaro”. Al final de las “neuronas” de tu modelo, obtendrás unos números crudos, a menudo llamados “logits”. Estos logits pueden ser cualquier valor real (negativos, positivos, grandes, pequeños).</p>
+<p><strong>El problema:</strong> ¿Cómo transformamos estos números crudos en probabilidades significativas que sumen 1? Por ejemplo, si los logits para “gato”, “perro” y “pájaro” son <span class="math inline">\([2.0, 1.0, 0.1]\)</span>, ¿qué significa eso en términos de probabilidad?</p>
+<p>Aquí es donde entra la <strong>función Softmax</strong>. Su trabajo es tomar un vector de números reales y transformarlo en una distribución de probabilidad, es decir, un vector de números entre 0 y 1 que suman 1.</p>
+<p>La fórmula de Softmax para un vector <span class="math inline">\(z = [z_1, z_2, \dots, z_K]\)</span> es:</p>
+<p><span class="math display">\[\text{Softmax}(z_i) = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}}\]</span></p>
+<p>donde: * <span class="math inline">\(z_i\)</span> es el <span class="math inline">\(i\)</span>-ésimo elemento del vector de entrada. * <span class="math inline">\(e\)</span> es la base del logaritmo natural (aproximadamente 2.71828). * La sumatoria en el denominador va sobre todos los elementos del vector <span class="math inline">\(z\)</span>.</p>
+<p><strong>¿Cómo funciona?</strong></p>
+<ol type="1">
+<li><strong>Exponenciación:</strong> Primero, toma la exponencial de cada número de entrada (<span class="math inline">\(e^{z_i}\)</span>). Esto hace que todos los números sean positivos. Además, magnifica las diferencias: un número ligeramente mayor se vuelve mucho más grande que uno ligeramente menor después de la exponenciación.</li>
+<li><strong>Normalización:</strong> Luego, divide cada valor exponencial por la suma de <em>todos</em> los valores exponenciales. Esto asegura que todos los números resultantes estén entre 0 y 1 y que su suma sea exactamente 1.</li>
+</ol>
+<p><strong>Ejemplo Numérico:</strong></p>
+<p>Supongamos que tu modelo de clasificación de imágenes arroja los siguientes logits para las clases “gato”, “perro”, “pájaro”:</p>
+<p><span class="math inline">\(z = [z_{\text{gato}}, z_{\text{perro}}, z_{\text{pájaro}}] = [2.0, 1.0, 0.1]\)</span></p>
+<p><strong>Paso 1: Exponenciación</strong></p>
+<ul>
+<li><span class="math inline">\(e^{z_{\text{gato}}} = e^{2.0} \approx 7.389\)</span></li>
+<li><span class="math inline">\(e^{z_{\text{perro}}} = e^{1.0} \approx 2.718\)</span></li>
+<li><span class="math inline">\(e^{z_{\text{pájaro}}} = e^{0.1} \approx 1.105\)</span></li>
+</ul>
+<p><strong>Paso 2: Suma de los exponenciales (Denominador)</strong></p>
+<ul>
+<li><span class="math inline">\(\sum_{j=1}^{3} e^{z_j} = 7.389 + 2.718 + 1.105 = 11.212\)</span></li>
+</ul>
+<p><strong>Paso 3: Normalización (Cálculo de Softmax para cada clase)</strong></p>
+<ul>
+<li><span class="math inline">\(\text{Softmax}(z_{\text{gato}}) = \frac{7.389}{11.212} \approx 0.659\)</span></li>
+<li><span class="math inline">\(\text{Softmax}(z_{\text{perro}}) = \frac{2.718}{11.212} \approx 0.242\)</span></li>
+<li><span class="math inline">\(\text{Softmax}(z_{\text{pájaro}}) = \frac{1.105}{11.212} \approx 0.099\)</span></li>
+</ul>
+<p>El vector de probabilidades resultante es aproximadamente <span class="math inline">\([0.659, 0.242, 0.099]\)</span>.</p>
+<p><strong>Interpretación:</strong> Esto nos dice que el modelo está “65.9% seguro” de que la imagen es un gato, “24.2% seguro” de que es un perro y “9.9% seguro” de que es un pájaro. La suma de estas probabilidades es <span class="math inline">\(0.659 + 0.242 + 0.099 = 1.000\)</span>.</p>
+<p>La función Softmax es crucial en las redes neuronales para la clasificación, ya que proporciona una manera de interpretar las salidas crudas del modelo como probabilidades sobre las diferentes clases.</p>
+</section>
+<section id="la-divergencia-kullback-leibler-kl-midiendo-la-diferencia-entre-distribuciones" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="la-divergencia-kullback-leibler-kl-midiendo-la-diferencia-entre-distribuciones"><span class="header-section-number">2.6</span> La Divergencia Kullback-Leibler (KL): Midiendo la Diferencia entre Distribuciones</h2>
+<p>La Divergencia Kullback-Leibler, o simplemente KL-Divergencia, es una medida de cuánto difiere una distribución de probabilidad de otra. No es una “distancia” en el sentido matemático estricto (como la distancia euclidiana), porque no es simétrica y no satisface la desigualdad triangular.</p>
+<p>En t-SNE, la KL-Divergencia se utiliza como la <strong>función de costo</strong> que el algoritmo intenta minimizar. Mide cuán diferentes son las probabilidades de similitud entre puntos en el espacio de alta dimensión (<span class="math inline">\(P\)</span>) y en el espacio de baja dimensión (<span class="math inline">\(Q\)</span>). El objetivo es hacer que <span class="math inline">\(Q\)</span> sea lo más parecido posible a <span class="math inline">\(P\)</span>.</p>
+<p>La fórmula de la KL-Divergencia de una distribución <span class="math inline">\(Q\)</span> con respecto a una distribución <span class="math inline">\(P\)</span> (es decir, <span class="math inline">\(P\)</span> es la “verdadera” o de referencia, y <span class="math inline">\(Q\)</span> es nuestra aproximación) es:</p>
+<p><span class="math display">\[\text{KL}(P || Q) = \sum_i P(i) \log \left( \frac{P(i)}{Q(i)} \right)\]</span></p>
+<p>donde: * <span class="math inline">\(P(i)\)</span> es la probabilidad de que el evento <span class="math inline">\(i\)</span> ocurra en la distribución <span class="math inline">\(P\)</span>. * <span class="math inline">\(Q(i)\)</span> es la probabilidad de que el evento <span class="math inline">\(i\)</span> ocurra en la distribución <span class="math inline">\(Q\)</span>. * La suma se realiza sobre todos los posibles eventos o valores de la distribución.</p>
+<p><strong>¿Cómo funciona?</strong></p>
+<p>La KL-Divergencia es la esperanza del logaritmo de la razón de las probabilidades entre las dos distribuciones, donde la esperanza se toma sobre la distribución <span class="math inline">\(P\)</span>.</p>
+<ul>
+<li><strong>Si <span class="math inline">\(P(i)\)</span> y <span class="math inline">\(Q(i)\)</span> son similares para un <span class="math inline">\(i\)</span> dado:</strong> <span class="math inline">\(\frac{P(i)}{Q(i)}\)</span> estará cerca de 1, y <span class="math inline">\(\log(1) = 0\)</span>. Esto contribuye poco a la divergencia.</li>
+<li><strong>Si <span class="math inline">\(P(i)\)</span> es grande pero <span class="math inline">\(Q(i)\)</span> es pequeña:</strong> <span class="math inline">\(\frac{P(i)}{Q(i)}\)</span> será grande, y <span class="math inline">\(\log(\text{grande})\)</span> será un número positivo grande. Esto contribuye significativamente a la divergencia, penalizando fuertemente la situación en la que <span class="math inline">\(Q\)</span> asigna una probabilidad baja a un evento que es probable en <span class="math inline">\(P\)</span>.</li>
+<li><strong>Si <span class="math inline">\(P(i)\)</span> es pequeña pero <span class="math inline">\(Q(i)\)</span> es grande:</strong> <span class="math inline">\(\frac{P(i)}{Q(i)}\)</span> será pequeña, y <span class="math inline">\(\log(\text{pequeña})\)</span> será un número negativo grande. Sin embargo, como <span class="math inline">\(P(i)\)</span> es pequeño, la contribución total <span class="math inline">\(P(i) \log \left( \frac{P(i)}{Q(i)} \right)\)</span> será pequeña o incluso cercana a cero.</li>
+<li><strong>Si <span class="math inline">\(P(i) = 0\)</span> y <span class="math inline">\(Q(i) \neq 0\)</span>:</strong> La contribución es 0 (por definición de <span class="math inline">\(\log(0/Q(i)) = \log(0)\)</span> que es indefinido, pero el límite es <span class="math inline">\(P(i)\log P(i)\)</span> que tiende a 0).</li>
+<li><strong>Si <span class="math inline">\(P(i) \neq 0\)</span> y <span class="math inline">\(Q(i) = 0\)</span>:</strong> La divergencia se vuelve infinita. Esto significa que si la distribución de referencia <span class="math inline">\(P\)</span> asigna alguna probabilidad a un evento, y la distribución <span class="math inline">\(Q\)</span> le asigna cero probabilidad, la KL-Divergencia es infinita. ¡Esto es una penalización muy fuerte y deseable en t-SNE! Significa que no podemos permitir que <span class="math inline">\(Q\)</span> no le dé probabilidad a algo que <span class="math inline">\(P\)</span> sí considera probable.</li>
+</ul>
+<p><strong>Ejemplo Numérico: Midiendo la No-Simetría de KL</strong></p>
+<p>Consideremos dos distribuciones de probabilidad <span class="math inline">\(P\)</span> y <span class="math inline">\(Q\)</span> para un dado de 6 caras:</p>
+<p><strong>Distribución <span class="math inline">\(P\)</span> (Dado Justo):</strong> <span class="math inline">\(P = [P(1), P(2), P(3), P(4), P(5), P(6)]\)</span> <span class="math inline">\(P = [\frac{1}{6}, \frac{1}{6}, \frac{1}{6}, \frac{1}{6}, \frac{1}{6}, \frac{1}{6}] \approx [0.167, 0.167, 0.167, 0.167, 0.167, 0.167]\)</span></p>
+<p><strong>Distribución <span class="math inline">\(Q\)</span> (Dado Cargado, favorece el 6):</strong> <span class="math inline">\(Q = [Q(1), Q(2), Q(3), Q(4), Q(5), Q(6)]\)</span> <span class="math inline">\(Q = [0.1, 0.1, 0.1, 0.1, 0.1, 0.5]\)</span></p>
+<p><strong>Cálculo de <span class="math inline">\(\text{KL}(P || Q)\)</span> (Cuánto difiere <span class="math inline">\(Q\)</span> de <span class="math inline">\(P\)</span>):</strong></p>
+<p><span class="math display">\[\text{KL}(P || Q) = \sum_{i=1}^{6} P(i) \log \left( \frac{P(i)}{Q(i)} \right)\]</span></p>
+<ul>
+<li>Para <span class="math inline">\(i=1, \dots, 5\)</span>: <span class="math inline">\(P(i) = \frac{1}{6}\)</span>, <span class="math inline">\(Q(i) = 0.1\)</span>
+<ul>
+<li><span class="math inline">\(\frac{P(i)}{Q(i)} = \frac{1/6}{0.1} = \frac{0.167}{0.1} \approx 1.67\)</span></li>
+<li><span class="math inline">\(P(i) \log \left( \frac{P(i)}{Q(i)} \right) \approx 0.167 \times \log(1.67) \approx 0.167 \times 0.513 \approx 0.0857\)</span> (para cada uno de los 5 casos)</li>
+</ul></li>
+<li>Para <span class="math inline">\(i=6\)</span>: <span class="math inline">\(P(6) = \frac{1}{6}\)</span>, <span class="math inline">\(Q(6) = 0.5\)</span>
+<ul>
+<li><span class="math inline">\(\frac{P(6)}{Q(6)} = \frac{1/6}{0.5} = \frac{0.167}{0.5} \approx 0.334\)</span></li>
+<li><span class="math inline">\(P(6) \log \left( \frac{P(6)}{Q(6)} \right) \approx 0.167 \times \log(0.334) \approx 0.167 \times (-1.096) \approx -0.183\)</span></li>
+</ul></li>
+</ul>
+<p>Sumando todo: <span class="math inline">\(\text{KL}(P || Q) \approx (5 \times 0.0857) + (-0.183) = 0.4285 - 0.183 = 0.2455\)</span></p>
+<p><strong>Cálculo de <span class="math inline">\(\text{KL}(Q || P)\)</span> (Cuánto difiere <span class="math inline">\(P\)</span> de <span class="math inline">\(Q\)</span>):</strong></p>
+<p><span class="math display">\[\text{KL}(Q || P) = \sum_{i=1}^{6} Q(i) \log \left( \frac{Q(i)}{P(i)} \right)\]</span></p>
+<ul>
+<li>Para <span class="math inline">\(i=1, \dots, 5\)</span>: <span class="math inline">\(Q(i) = 0.1\)</span>, <span class="math inline">\(P(i) = \frac{1}{6}\)</span>
+<ul>
+<li><span class="math inline">\(\frac{Q(i)}{P(i)} = \frac{0.1}{1/6} = \frac{0.1}{0.167} \approx 0.6\)</span></li>
+<li><span class="math inline">\(Q(i) \log \left( \frac{Q(i)}{P(i)} \right) \approx 0.1 \times \log(0.6) \approx 0.1 \times (-0.511) \approx -0.0511\)</span> (para cada uno de los 5 casos)</li>
+</ul></li>
+<li>Para <span class="math inline">\(i=6\)</span>: <span class="math inline">\(Q(6) = 0.5\)</span>, <span class="math inline">\(P(6) = \frac{1}{6}\)</span>
+<ul>
+<li><span class="math inline">\(\frac{Q(6)}{P(6)} = \frac{0.5}{1/6} = \frac{0.5}{0.167} \approx 2.99\)</span></li>
+<li><span class="math inline">\(Q(6) \log \left( \frac{Q(6)}{P(6)} \right) \approx 0.5 \times \log(2.99) \approx 0.5 \times 1.095 \approx 0.5475\)</span></li>
+</ul></li>
+</ul>
+<p>Sumando todo: <span class="math inline">\(\text{KL}(Q || P) \approx (5 \times -0.0511) + 0.5475 = -0.2555 + 0.5475 = 0.292\)</span></p>
+<p><strong>Conclusión sobre la No-Simetría:</strong></p>
+<p>Como puedes ver, <span class="math inline">\(\text{KL}(P || Q) \approx 0.2455\)</span> y <span class="math inline">\(\text{KL}(Q || P) \approx 0.292\)</span>. <strong><span class="math inline">\(\text{KL}(P || Q) \neq \text{KL}(Q || P)\)</span></strong>. Esto demuestra claramente que la KL-Divergencia no es simétrica. El costo de modelar mal a <span class="math inline">\(P\)</span> usando <span class="math inline">\(Q\)</span> no es el mismo que el costo de modelar mal a <span class="math inline">\(Q\)</span> usando <span class="math inline">\(P\)</span>.</p>
+<p><strong>Importancia en t-SNE:</strong></p>
+<p>En t-SNE, usamos <span class="math inline">\(\text{KL}(P || Q)\)</span>. Esto significa que penalizamos fuertemente cuando <span class="math inline">\(Q\)</span> le da una probabilidad baja a pares de puntos que en alta dimensión (<span class="math inline">\(P\)</span>) eran muy similares. Es decir, si <span class="math inline">\(P_{ij}\)</span> es grande (puntos <span class="math inline">\(i\)</span> y <span class="math inline">\(j\)</span> son vecinos cercanos en alta dimensión), pero <span class="math inline">\(Q_{ij}\)</span> es pequeño (puntos <span class="math inline">\(i\)</span> y <span class="math inline">\(j\)</span> están lejos en baja dimensión), la función de costo aumenta significativamente. Esto fuerza a t-SNE a preservar las relaciones de “vecindad” (cercanía) del espacio original.</p>
+<p>La asimetría de la KL-Divergencia es una característica deseada en t-SNE. Si fuera simétrica, penalizaría tanto cuando <span class="math inline">\(P\)</span> asigna una probabilidad alta y <span class="math inline">\(Q\)</span> una baja, como cuando <span class="math inline">\(P\)</span> asigna una probabilidad baja y <span class="math inline">\(Q\)</span> una alta. Esto último no es lo que queremos. Queremos que los vecinos permanezcan vecinos, pero no nos importa tanto si los no-vecinos se acercan un poco si eso ayuda a acomodar a los verdaderos vecinos. La KL asimétrica, con la penalización pesada cuando <span class="math inline">\(Q(i)\)</span> es cero y <span class="math inline">\(P(i)\)</span> no, es ideal para esto.</p>
+</section>
+<section id="uniform-manifold-approximation-and-projection-umap" class="level2" data-number="2.7">
+<h2 data-number="2.7" class="anchored" data-anchor-id="uniform-manifold-approximation-and-projection-umap"><span class="header-section-number">2.7</span> Uniform Manifold Approximation and Projection (UMAP)</h2>
+<p>UMAP es una técnica de reducción de dimensionalidad no lineal relativamente nueva y muy potente, desarrollada por Leland McInnes, John Healy y James Melville en 2018. Su objetivo, similar al de t-SNE, es proyectar datos de alta dimensión en un espacio de menor dimensión (comúnmente 2D o 3D) para visualización o como un paso previo para otros algoritmos de aprendizaje automático. A diferencia de t-SNE, que se basa en probabilidades de similitud y divergencia KL, UMAP se fundamenta en conceptos de topología algebraica y teoría de la geometría riemanniana, lo que le confiere propiedades únicas en cuanto a velocidad y preservación de la estructura global.</p>
+<section id="fundamentos-matemáticos-de-umap" class="level3" data-number="2.7.1">
+<h3 data-number="2.7.1" class="anchored" data-anchor-id="fundamentos-matemáticos-de-umap"><span class="header-section-number">2.7.1</span> Fundamentos Matemáticos de UMAP</h3>
+<p>La teoría matemática subyacente a UMAP es considerablemente más compleja que la de t-SNE, extrayendo conceptos de áreas como la topología algebraica y la teoría de los conjuntos difusos. Sin embargo, su lógica puede entenderse en tres fases principales:</p>
+<section id="construcción-de-un-grafo-ponderado-en-el-espacio-de-alta-dimensión" class="level4" data-number="2.7.1.1">
+<h4 data-number="2.7.1.1" class="anchored" data-anchor-id="construcción-de-un-grafo-ponderado-en-el-espacio-de-alta-dimensión"><span class="header-section-number">2.7.1.1</span> Construcción de un Grafo Ponderado en el Espacio de Alta Dimensión</h4>
+<p>UMAP comienza construyendo un <strong>grafo de vecindad difuso</strong> (fuzzy simplicial set) en el espacio de alta dimensión. Este grafo busca modelar la estructura topológica de los datos, asumiendo que los datos residen en una variedad (manifold) de baja dimensión incrustada en el espacio de alta dimensión.</p>
+</section>
+<section id="noción-de-distancia-y-conectividad-adaptativa" class="level4" data-number="2.7.1.2">
+<h4 data-number="2.7.1.2" class="anchored" data-anchor-id="noción-de-distancia-y-conectividad-adaptativa"><span class="header-section-number">2.7.1.2</span> Noción de Distancia y Conectividad Adaptativa</h4>
+<p>Para cada punto de datos <span class="math inline">\(x_i\)</span>, UMAP determina su “radio de vecindad” de una manera adaptativa, basándose en la distancia a su <span class="math inline">\(k\)</span>-ésimo vecino más cercano, <span class="math inline">\(\rho_i\)</span>. Este valor es fundamental para normalizar la distancia de los vecinos de <span class="math inline">\(x_i\)</span>:</p>
+<ul>
+<li><strong>Distancia al <span class="math inline">\(k\)</span>-ésimo vecino:</strong> Para cada punto <span class="math inline">\(x_i\)</span>, se calcula la distancia <span class="math inline">\(\rho_i\)</span> al <span class="math inline">\(k\)</span>-ésimo vecino más cercano. Esto asegura que la escala local de “cercanía” sea adaptativa a la densidad de los datos. En regiones densas, <span class="math inline">\(\rho_i\)</span> será pequeña; en regiones dispersas, será grande.</li>
+<li><strong>Normalización de las distancias:</strong> Las distancias entre <span class="math inline">\(x_i\)</span> y sus vecinos <span class="math inline">\(x_j\)</span> se escalan por <span class="math inline">\(\sigma_i\)</span>, donde <span class="math inline">\(\sigma_i\)</span> es un valor calculado para asegurar que la suma de las probabilidades (o pesos) de los vecinos de <span class="math inline">\(x_i\)</span> es una constante (<code>min_dist</code> y <code>spread</code> en los parámetros de UMAP influyen en esto). Esta normalización es análoga a la perplejidad en t-SNE, pero su objetivo es generar un número consistente de “vecinos efectivos” para cada punto en el grafo.</li>
+</ul>
+<p>La conectividad (o peso) entre dos puntos <span class="math inline">\(x_i\)</span> y <span class="math inline">\(x_j\)</span> en el espacio de alta dimensión, <span class="math inline">\(\mu_{ij}\)</span>, se define usando una función de “núcleo” (kernel) que incorpora esta escala adaptativa:</p>
+<p><span class="math display">\[\mu_{ij} = \exp\left( - \frac{\text{dist}(x_i, x_j) - \rho_i}{\sigma_i} \right)\]</span></p>
+</section>
+<section id="simetrización-del-grafo-difuso" class="level4" data-number="2.7.1.3">
+<h4 data-number="2.7.1.3" class="anchored" data-anchor-id="simetrización-del-grafo-difuso"><span class="header-section-number">2.7.1.3</span> Simetrización del Grafo Difuso</h4>
+<p>El grafo inicial es dirigido y asimétrico (la conectividad de <span class="math inline">\(x_i\)</span> a <span class="math inline">\(x_j\)</span> no es necesariamente la misma que de <span class="math inline">\(x_j\)</span> a <span class="math inline">\(x_i\)</span>). Para obtener un grafo de conectividad bidireccional, UMAP simetriza las conectividades utilizando una operación de unión probabilística (análoga a <span class="math inline">\((A \cup B) = A + B - AB\)</span> para eventos independientes):</p>
+<p><span class="math display">\[w_{ij} = \mu_{ij} + \mu_{ji} - (\mu_{ij} \cdot \mu_{ji})\]</span></p>
+<p>Este <span class="math inline">\(w_{ij}\)</span> representa la “fuerza” de la conexión entre <span class="math inline">\(x_i\)</span> y <span class="math inline">\(x_j\)</span> en el espacio de alta dimensión, y está en el rango <span class="math inline">\([0, 1]\)</span>. Los bordes <span class="math inline">\((i, j)\)</span> con <span class="math inline">\(w_{ij} &gt; 0\)</span> forman el <strong>grafo de conectividad de alta dimensión</strong>.</p>
+</section>
+<section id="construcción-de-un-grafo-ponderado-en-el-espacio-de-baja-dimensión" class="level4" data-number="2.7.1.4">
+<h4 data-number="2.7.1.4" class="anchored" data-anchor-id="construcción-de-un-grafo-ponderado-en-el-espacio-de-baja-dimensión"><span class="header-section-number">2.7.1.4</span> Construcción de un Grafo Ponderado en el Espacio de Baja Dimensión</h4>
+<p>De manera similar, UMAP construye un grafo en el espacio de baja dimensión (embedding) <span class="math inline">\(Y\)</span>. La función de conectividad para el espacio de baja dimensión, <span class="math inline">\(q_{ij}\)</span>, se elige para que sea una función con “curvas” que se ajustan a las propiedades deseadas de la visualización, como la preservación de la estructura local y global. Una función común para <span class="math inline">\(q_{ij}\)</span> es:</p>
+<p><span class="math display">\[q_{ij} = (1 + a\|y_i - y_j\|^{2b})^{-1}\]</span></p>
+<p>donde: * <span class="math inline">\(y_i\)</span> y <span class="math inline">\(y_j\)</span> son los puntos correspondientes en el espacio de baja dimensión. * <span class="math inline">\(a\)</span> y <span class="math inline">\(b\)</span> son parámetros que controlan la forma de la curva de esta función. Estos parámetros se derivan de los parámetros de usuario <code>min_dist</code> (distancia mínima permitida entre puntos proyectados) y <code>spread</code> (dispersión de los puntos). * <code>min_dist</code> controla la separación entre los clusters. Un <code>min_dist</code> pequeño permitirá que los puntos se agrupen más densamente. * <code>spread</code> controla la escala de los clusters. Un <code>spread</code> pequeño comprimirá los clusters, mientras que uno grande los expandirá.</p>
+<p>Esta función permite que las distancias pequeñas en el embedding se mapeen a una mayor variabilidad (lo que ayuda a la separación de clusters) y que las distancias grandes se compriman (preservando la estructura global). A menudo se la compara con la t-Student, pero su forma paramétrica es más flexible y se ajusta a las necesidades topológicas.</p>
+</section>
+<section id="optimización-estocástica-para-coincidir-los-grafos" class="level4" data-number="2.7.1.5">
+<h4 data-number="2.7.1.5" class="anchored" data-anchor-id="optimización-estocástica-para-coincidir-los-grafos"><span class="header-section-number">2.7.1.5</span> Optimización Estocástica para Coincidir los Grafos</h4>
+<p>Finalmente, UMAP optimiza las coordenadas de los puntos en el espacio de baja dimensión <span class="math inline">\(Y\)</span> para que la estructura de su grafo <span class="math inline">\(Q\)</span> coincida lo más posible con la del grafo <span class="math inline">\(W\)</span> en el espacio de alta dimensión.</p>
+<p>UMAP define una función de costo que se minimiza utilizando un descenso de gradiente estocástico. Esta función de costo se inspira en la divergencia de la entropía cruzada binaria, pero está formulada para modelar la probabilidad de que un borde exista o no en ambos grafos:</p>
+<p><span class="math display">\[C = \sum_{i,j \text{ s.t. } i \neq j} \left[ w_{ij} \log \left( \frac{w_{ij}}{q_{ij}} \right) + (1-w_{ij}) \log \left( \frac{1-w_{ij}}{1-q_{ij}} \right) \right]\]</span></p>
+<p>donde: * <span class="math inline">\(w_{ij}\)</span> es la conectividad (peso) entre <span class="math inline">\(x_i\)</span> y <span class="math inline">\(x_j\)</span> en el espacio de alta dimensión. * <span class="math inline">\(q_{ij}\)</span> es la conectividad entre <span class="math inline">\(y_i\)</span> y <span class="math inline">\(y_j\)</span> en el espacio de baja dimensión.</p>
+<p>El gradiente de esta función de costo impulsa la optimización. Tiene componentes de atracción y repulsión: * <strong>Atracción:</strong> Los puntos que son vecinos cercanos en alta dimensión (<span class="math inline">\(w_{ij}\)</span> alto) se atraen mutuamente en baja dimensión para aumentar <span class="math inline">\(q_{ij}\)</span> y reducir el costo. La fuerza de atracción es más fuerte cuando <span class="math inline">\(w_{ij}\)</span> es alto y <span class="math inline">\(q_{ij}\)</span> es bajo. * <strong>Repulsión:</strong> Los puntos que no son vecinos en alta dimensión (<span class="math inline">\(w_{ij}\)</span> bajo) se repelen en baja dimensión para disminuir <span class="math inline">\(q_{ij}\)</span> y reducir el costo. UMAP optimiza este proceso de forma eficiente muestreando cuidadosamente los “no-vecinos” para las fuerzas repulsivas, lo que contribuye a su velocidad.</p>
+<p>La optimización es más eficiente que la de t-SNE por varias razones: * Se basa en un grafo esparcido (sparse graph), ya que solo considera un número limitado de vecinos para cada punto. * El descenso de gradiente estocástico solo actualiza un subconjunto de puntos por iteración. * La función de costo y su gradiente están diseñados para ser computacionalmente más amigables.</p>
+</section>
+</section>
+<section id="comparación-de-enfoques-t-sne-vs.-umap-teoría" class="level3" data-number="2.7.2">
+<h3 data-number="2.7.2" class="anchored" data-anchor-id="comparación-de-enfoques-t-sne-vs.-umap-teoría"><span class="header-section-number">2.7.2</span> Comparación de Enfoques: t-SNE vs.&nbsp;UMAP (Teoría)</h3>
+<p>Ambas t-SNE y UMAP son herramientas poderosas para la reducción de dimensionalidad no lineal y la visualización, buscando revelar la estructura intrínseca de los datos. Sin embargo, sus fundamentos matemáticos y sus enfoques computacionales les otorgan características y rendimientos distintivos.</p>
+<table class="table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 40%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Característica</th>
+<th style="text-align: left;">t-SNE</th>
+<th style="text-align: left;">UMAP</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Fundamentos Teóricos</strong></td>
+<td style="text-align: left;">Teoría de probabilidades, divergencia Kullback-Leibler. Busca preservar las probabilidades de similitud (vecindad).</td>
+<td style="text-align: left;">Topología algebraica, teoría de la geometría riemanniana, conjuntos simpliciales difusos. Busca preservar la estructura topológica (conectividad).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Concepto de Similitud</strong></td>
+<td style="text-align: left;">Probabilidades de similitud <span class="math inline">\(p_{ij}\)</span> (basadas en Gaussianas) en alta dimensión y <span class="math inline">\(q_{ij}\)</span> (basadas en t-Student) en baja dimensión.</td>
+<td style="text-align: left;">Conectividad en un grafo ponderado (fuzzy simplicial set) que representa la proximidad. La noción de “vecino” es localmente adaptable.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Preservación de Estructura</strong></td>
+<td style="text-align: left;"><strong>Excelente para la estructura local (clusters).</strong> Tiende a aglomerar puntos cercanos y separarlos bien. A menudo <strong>distorsiona la estructura global</strong> (las distancias entre clusters no son fiables).</td>
+<td style="text-align: left;"><strong>Excelente para estructura local Y global.</strong> Busca preservar tanto los clusters como las relaciones entre ellos. Es más probable que las distancias entre clusters tengan significado.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Función de Costo</strong></td>
+<td style="text-align: left;">Divergencia Kullback-Leibler (KL) asimétrica: <span class="math inline">\(\text{KL}(P || Q)\)</span>. Penaliza fuertemente la pérdida de vecinos cercanos.</td>
+<td style="text-align: left;">Inspirada en la entropía cruzada binaria, optimizada para la correspondencia de grafos: <span class="math inline">\(\sum [w \log(w/q) + (1-w) \log((1-w)/(1-q))]\)</span>.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Distribución en Baja Dimensión</strong></td>
+<td style="text-align: left;">Distribución t-Student con 1 grado de libertad (Cauchy). Sus colas pesadas resuelven el “problema de hacinamiento”.</td>
+<td style="text-align: left;">Función de conectividad personalizada $ (1 + a|y_i - y_j|<sup>{2b})</sup>{-1} $. Parametros <code>min_dist</code> y <code>spread</code> controlan su forma para influir en la dispersión.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Velocidad y Escalabilidad</strong></td>
+<td style="text-align: left;"><strong>Generalmente lento.</strong> Su complejidad es <span class="math inline">\(O(N^2)\)</span> (o <span class="math inline">\(O(N \log N)\)</span> con optimizaciones como la del árbol de Barnes-Hut). No es ideal para datasets con más de ~50,000 puntos.</td>
+<td style="text-align: left;"><strong>Significativamente más rápido.</strong> Su complejidad es <span class="math inline">\(O(N \log N)\)</span> para la construcción del grafo y luego <span class="math inline">\(O(N)\)</span> para la optimización. Puede manejar datasets de millones de puntos.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Reproductibilidad</strong></td>
+<td style="text-align: left;">Muy sensible a los parámetros (<code>perplexity</code>, <code>learning_rate</code>, <code>init</code>). Ejecuciones repetidas con diferentes <code>random_state</code> pueden producir visualizaciones notablemente diferentes.</td>
+<td style="text-align: left;">Generalmente más robusto a los cambios de parámetros y más consistente en la estructura global resultante entre ejecuciones.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Parámetros Clave</strong></td>
+<td style="text-align: left;"><code>perplexity</code> (número de “vecinos efectivos”), <code>learning_rate</code> (tasa de aprendizaje).</td>
+<td style="text-align: left;"><code>n_neighbors</code> (número de vecinos para construir el grafo inicial), <code>min_dist</code> (separación mínima entre puntos proyectados), <code>spread</code> (escala de los clusters), <code>metric</code> (métrica de distancia).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Forma de los Clusters</strong></td>
+<td style="text-align: left;">Tiende a producir clusters más densos y circulares, a veces con puntos aglomerados en el centro del mapa.</td>
+<td style="text-align: left;">Puede producir clusters con formas más diversas y una mejor separación visual, reflejando mejor la estructura intrínseca de los datos.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Aplicaciones Típicas</strong></td>
+<td style="text-align: left;">Excelente para la visualización de datos de transcriptómica (ej. single-cell RNA-seq), imágenes, texto. Muy bueno para identificar subpoblaciones distintas.</td>
+<td style="text-align: left;">Ampliamente utilizado en biología (ej. single-cell), visualización de embeddings de procesamiento del lenguaje natural (NLP), análisis de imágenes grandes. A menudo es la opción preferida por su equilibrio entre velocidad y calidad del embedding.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="enfoques-distintivos-en-la-práctica" class="level3" data-number="2.7.3">
+<h3 data-number="2.7.3" class="anchored" data-anchor-id="enfoques-distintivos-en-la-práctica"><span class="header-section-number">2.7.3</span> Enfoques Distintivos en la Práctica:</h3>
+<ul>
+<li><p><strong>t-SNE como “Microscopio Local”:</strong> t-SNE se comporta como un “microscopio” que se enfoca en las relaciones locales y los detalles finos de los clusters. Es excelente para identificar subgrupos dentro de sus datos. Sin embargo, no siempre garantiza que los grupos que están muy separados en el gráfico también lo estén en el espacio de alta dimensión, ni que el tamaño de los grupos sea proporcional a su número de puntos.</p></li>
+<li><p><strong>UMAP como “Mapa Global”:</strong> UMAP, al basarse en una aproximación de la topología del manifold, busca preservar las conexiones tanto locales como globales. Esto significa que las distancias relativas entre los clusters en el mapa de UMAP suelen ser más significativas que en t-SNE. UMAP es más adecuado cuando se desea comprender la estructura general del conjunto de datos, las relaciones entre los grandes grupos y la forma general de la “nube” de datos.</p></li>
+</ul>
+<p>En resumen, la elección entre t-SNE y UMAP a menudo depende del objetivo específico de la visualización y las características del dataset. Para conjuntos de datos grandes y para una comprensión tanto local como global, UMAP es generalmente preferible. Para un enfoque profundo en la separación de clusters locales en datasets de tamaño moderado, t-SNE sigue siendo una excelente herramienta.</p>
+</section>
+</section>
+</section>
+<section id="implementación-y-análisis-comparativo" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Implementación y Análisis Comparativo</h1>
+<p>En esta sección, aplicaremos tanto t-SNE como UMAP al dataset de dígitos de Scikit-learn y analizaremos los resultados, comparando las visualizaciones y las métricas de calidad de las proyecciones.</p>
+<section id="preparación-del-entorno-y-carga-de-datos" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="preparación-del-entorno-y-carga-de-datos"><span class="header-section-number">3.1</span> Preparación del Entorno y Carga de Datos</h2>
+<div id="setup" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn <span class="im">import</span> datasets</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.manifold <span class="im">import</span> TSNE</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics.pairwise <span class="im">import</span> euclidean_distances</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> silhouette_score</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> spearmanr</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> IPython.display <span class="im">import</span> display, HTML</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuración de estilo</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>plt.style.use(<span class="st">'seaborn-v0_8'</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>sns.set_palette(<span class="st">"husl"</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'figure.figsize'</span>] <span class="op">=</span> [<span class="dv">15</span>, <span class="dv">10</span>]</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'font.size'</span>] <span class="op">=</span> <span class="dv">12</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'axes.facecolor'</span>] <span class="op">=</span> <span class="st">'#EAEAEA'</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'figure.facecolor'</span>] <span class="op">=</span> <span class="st">'white'</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'grid.color'</span>] <span class="op">=</span> <span class="st">'#CCCCCC'</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'grid.linestyle'</span>] <span class="op">=</span> <span class="st">'--'</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'grid.linewidth'</span>] <span class="op">=</span> <span class="fl">0.5</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'axes.edgecolor'</span>] <span class="op">=</span> <span class="st">'black'</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'axes.linewidth'</span>] <span class="op">=</span> <span class="fl">0.8</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'xtick.color'</span>] <span class="op">=</span> <span class="st">'black'</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'ytick.color'</span>] <span class="op">=</span> <span class="st">'black'</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'text.color'</span>] <span class="op">=</span> <span class="st">'black'</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'axes.labelcolor'</span>] <span class="op">=</span> <span class="st">'black'</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'axes.titlecolor'</span>] <span class="op">=</span> <span class="st">'black'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="load-data" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargar el dataset de dígitos</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>digits <span class="op">=</span> datasets.load_digits(n_class<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> digits.data  </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> digits.target </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dimensiones de los datos de las imágenes (X): </span><span class="sc">{</span>X<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dimensiones de las etiquetas de las clases (y): </span><span class="sc">{</span>y<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>Dimensiones de los datos de las imágenes (X): (1797, 64) Dimensiones de las etiquetas de las clases (y): (1797,)</p>
+</div>
+</section>
+<section id="representación-de-imágenes-como-matrices" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="representación-de-imágenes-como-matrices"><span class="header-section-number">3.2</span> Representación de Imágenes como Matrices</h2>
+<p>Para procesar imágenes con algoritmos de machine learning, es fundamental entender cómo se representan numéricamente. Las imágenes, en esencia, son rejillas de píxeles, donde cada píxel tiene un valor numérico que representa su intensidad o color.</p>
+<section id="imágenes-en-escala-de-grises" class="level3" data-number="3.2.1">
+<h3 data-number="3.2.1" class="anchored" data-anchor-id="imágenes-en-escala-de-grises"><span class="header-section-number">3.2.1</span> Imágenes en Escala de Grises</h3>
+<p>Una imagen en escala de grises se representa como una matriz 2D, donde cada elemento de la matriz corresponde a un píxel y su valor representa la intensidad del gris (típicamente entre 0 para negro y 255 para blanco, u otros rangos dependiendo del formato).</p>
+<p>En nuestro ejemplo, el dataset de dígitos de Scikit-learn consta de imágenes de 8x8 píxeles en escala de grises. Cada imagen individual se puede visualizar como una matriz de 8x8:</p>
+<p><span class="math display">\[\begin{pmatrix}
+valor_{0,0} &amp; valor_{0,1} &amp; \dots &amp; valor_{0,7} \\
+valor_{1,0} &amp; valor_{1,1} &amp; \dots &amp; valor_{1,7} \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+valor_{7,0} &amp; valor_{7,1} &amp; \dots &amp; valor_{7,7}
+\end{pmatrix}\]</span></p>
+</section>
+<section id="imágenes-a-color-rgb" class="level3" data-number="3.2.2">
+<h3 data-number="3.2.2" class="anchored" data-anchor-id="imágenes-a-color-rgb"><span class="header-section-number">3.2.2</span> Imágenes a Color (RGB)</h3>
+<p>Las imágenes a color, comúnmente en formato RGB (Rojo, Verde, Azul), se representan como tensores 3D. Tienen dimensiones de altura, ancho y canales de color. Para una imagen RGB, hay 3 canales:</p>
+<p><span class="math display">\[\text{Imagen RGB} \in \mathbb{R}^{\text{altura} \times \text{ancho} \times 3}\]</span></p>
+<p>Cada canal es una matriz 2D que representa la intensidad de ese color específico para cada píxel. La combinación de los valores en los tres canales para un píxel dado determina su color final.</p>
+</section>
+<section id="aplanamiento-flattening-para-algoritmos-lineales" class="level3" data-number="3.2.3">
+<h3 data-number="3.2.3" class="anchored" data-anchor-id="aplanamiento-flattening-para-algoritmos-lineales"><span class="header-section-number">3.2.3</span> Aplanamiento (Flattening) para Algoritmos Lineales</h3>
+<p>Algoritmos como t-SNE o PCA trabajan con vectores de características de una sola dimensión. Por lo tanto, es necesario “aplanar” la representación matricial o tensorial de cada imagen en un único vector largo.</p>
+<p>Para una imagen de 8x8 como en el dataset de dígitos, la matriz 2D de 8x8 (64 píxeles) se aplana en un vector 1D de 64 elementos:</p>
+<p><span class="math display">\[\begin{pmatrix}
+valor_{0,0} \\
+valor_{0,1} \\
+\vdots \\
+valor_{7,7}
+\end{pmatrix}_{64 \times 1}\]</span></p>
+<p>Para una imagen RGB de altura x ancho x 3 canales, el tensor 3D se aplana en un vector 1D de altura <span class="math inline">\(\times\)</span> ancho <span class="math inline">\(\times\)</span> 3 elementos. Por ejemplo, una imagen de 100x100 píxeles RGB se convertiría en un vector de <span class="math inline">\(100 \times 100 \times 3 = 30,000\)</span> elementos.</p>
+<p>Este vector aplanado se convierte en la “muestra” o “instancia” de datos en el conjunto de datos de entrada para t-SNE, donde cada elemento del vector es una “característica” (un valor de píxel).</p>
+</section>
+</section>
+<section id="visualización-tabular-de-los-datos-dataframe" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="visualización-tabular-de-los-datos-dataframe"><span class="header-section-number">3.3</span> Visualización Tabular de los Datos (DataFrame)</h2>
+<p>Para comprender mejor la estructura de los datos aplanados antes de aplicar los algoritmos de reducción de dimensionalidad, podemos visualizarlos en un formato tabular, como un DataFrame de Pandas. Cada fila representará una imagen aplanada (una muestra), y cada columna representará un píxel específico (una característica).</p>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear un DataFrame para los datos de dígitos</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>df_digits <span class="op">=</span> pd.DataFrame(X)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>df_digits[<span class="st">'digito'</span>] <span class="op">=</span> y</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Mostrar el DataFrame</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>display(df_digits.head())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div>
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">0</th>
+<th data-quarto-table-cell-role="th">1</th>
+<th data-quarto-table-cell-role="th">2</th>
+<th data-quarto-table-cell-role="th">3</th>
+<th data-quarto-table-cell-role="th">4</th>
+<th data-quarto-table-cell-role="th">5</th>
+<th data-quarto-table-cell-role="th">6</th>
+<th data-quarto-table-cell-role="th">7</th>
+<th data-quarto-table-cell-role="th">8</th>
+<th data-quarto-table-cell-role="th">9</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">55</th>
+<th data-quarto-table-cell-role="th">56</th>
+<th data-quarto-table-cell-role="th">57</th>
+<th data-quarto-table-cell-role="th">58</th>
+<th data-quarto-table-cell-role="th">59</th>
+<th data-quarto-table-cell-role="th">60</th>
+<th data-quarto-table-cell-role="th">61</th>
+<th data-quarto-table-cell-role="th">62</th>
+<th data-quarto-table-cell-role="th">63</th>
+<th data-quarto-table-cell-role="th">digito</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>5.0</td>
+<td>13.0</td>
+<td>9.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>...</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>6.0</td>
+<td>13.0</td>
+<td>10.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>12.0</td>
+<td>13.0</td>
+<td>5.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>...</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>11.0</td>
+<td>16.0</td>
+<td>10.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>4.0</td>
+<td>15.0</td>
+<td>12.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>...</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>3.0</td>
+<td>11.0</td>
+<td>16.0</td>
+<td>9.0</td>
+<td>0.0</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>7.0</td>
+<td>15.0</td>
+<td>13.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>8.0</td>
+<td>...</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>7.0</td>
+<td>13.0</td>
+<td>13.0</td>
+<td>9.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>3</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>11.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>...</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>2.0</td>
+<td>16.0</td>
+<td>4.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+
+<p>5 rows × 65 columns</p>
+</div>
+</div>
+<p>En este DataFrame, cada una de las primeras 64 columnas (<code>pixel_0</code> a <code>pixel_63</code>) representan la intensidad aplanada de un píxel de la imagen de 8x8. La última columna (<code>digito</code>) contiene la etiqueta de la clase (el dígito que representa la imagen).</p>
+<p>Esta vista nos permite ver los valores numéricos exactos que alimentan los algoritmos.</p>
+</section>
+<section id="visualización-de-datos-originales" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="visualización-de-datos-originales"><span class="header-section-number">3.4</span> Visualización de Datos Originales</h2>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">6</span>, <span class="dv">6</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>plt.imshow(digits.images[<span class="dv">0</span>], cmap<span class="op">=</span>plt.cm.gray_r, interpolation<span class="op">=</span><span class="st">'nearest'</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Ejemplo de Dígito (0)"</span>, pad<span class="op">=</span><span class="dv">20</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>plt.axis(<span class="st">'off'</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="entrega_final_files/figure-html/plot-original-output-1.png" id="plot-original" class="img-fluid"></p>
+</section>
+<section id="implementación-y-análisis-de-t-sne" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="implementación-y-análisis-de-t-sne"><span class="header-section-number">3.5</span> Implementación y Análisis de t-SNE</h2>
+<p>En esta subsección, aplicaremos t-SNE al dataset de dígitos y exploraremos el proceso de optimización y el efecto de sus hiperparámetros.</p>
+<section id="proceso-de-optimización-de-t-sne" class="level3" data-number="3.5.1">
+<h3 data-number="3.5.1" class="anchored" data-anchor-id="proceso-de-optimización-de-t-sne"><span class="header-section-number">3.5.1</span> Proceso de Optimización de t-SNE</h3>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_optimization_process(X, y, n_steps<span class="op">=</span><span class="dv">6</span>):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    n_iter <span class="op">=</span> <span class="dv">1000</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">20</span>, <span class="dv">10</span>))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    axes <span class="op">=</span> axes.flatten()</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    iterations_to_plot <span class="op">=</span> np.linspace(<span class="dv">250</span>, n_iter, n_steps).astype(<span class="bu">int</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> iterations_to_plot[<span class="op">-</span><span class="dv">1</span>] <span class="op">&lt;</span> <span class="dv">250</span>:</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        iterations_to_plot[<span class="op">-</span><span class="dv">1</span>] <span class="op">=</span> <span class="dv">250</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, <span class="bu">iter</span> <span class="kw">in</span> <span class="bu">enumerate</span>(iterations_to_plot):</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        tsne <span class="op">=</span> TSNE(n_components<span class="op">=</span><span class="dv">2</span>, </span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                   init<span class="op">=</span><span class="st">'random'</span>,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>                   random_state<span class="op">=</span><span class="dv">42</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>                   perplexity<span class="op">=</span><span class="dv">30</span>,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                   n_iter<span class="op">=</span><span class="bu">iter</span>)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        Y <span class="op">=</span> tsne.fit_transform(X)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        ax <span class="op">=</span> axes[i]</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        scatter <span class="op">=</span> ax.scatter(Y[:, <span class="dv">0</span>], Y[:, <span class="dv">1</span>], c<span class="op">=</span>y, cmap<span class="op">=</span><span class="st">'tab10'</span>, alpha<span class="op">=</span><span class="fl">0.7</span>, s<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        ax.set_title(<span class="ss">f'Iteración </span><span class="sc">{</span><span class="bu">iter</span><span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        ax.axis(<span class="st">'off'</span>)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    plt.suptitle(<span class="st">'Evolución de la Proyección t-SNE'</span>, y<span class="op">=</span><span class="fl">1.05</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    plt.tight_layout()</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    plt.show()</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>plot_optimization_process(X, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="entrega_final_files/figure-html/optimization-visualization-output-1.png" id="optimization-visualization" class="img-fluid"></p>
+</section>
+<section id="análisis-de-la-convergencia-de-t-sne" class="level3" data-number="3.5.2">
+<h3 data-number="3.5.2" class="anchored" data-anchor-id="análisis-de-la-convergencia-de-t-sne"><span class="header-section-number">3.5.2</span> Análisis de la Convergencia de t-SNE</h3>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_convergence_metrics(X, y):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    n_iter <span class="op">=</span> <span class="dv">1000</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    step_size <span class="op">=</span> <span class="dv">50</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    iterations <span class="op">=</span> <span class="bu">range</span>(<span class="dv">250</span>, n_iter <span class="op">+</span> <span class="dv">1</span>, step_size)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Métricas a seguir</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    distance_correlations <span class="op">=</span> []</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    silhouette_scores <span class="op">=</span> []</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="bu">iter</span> <span class="kw">in</span> iterations:</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        tsne <span class="op">=</span> TSNE(n_components<span class="op">=</span><span class="dv">2</span>, </span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>                   init<span class="op">=</span><span class="st">'random'</span>,</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                   random_state<span class="op">=</span><span class="dv">42</span>,</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                   perplexity<span class="op">=</span><span class="dv">30</span>,</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>                   n_iter<span class="op">=</span><span class="bu">iter</span>)</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        Y <span class="op">=</span> tsne.fit_transform(X)</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Correlación de distancias</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>        dist_X <span class="op">=</span> euclidean_distances(X)</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>        dist_Y <span class="op">=</span> euclidean_distances(Y)</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        corr, _ <span class="op">=</span> spearmanr(dist_X.flatten(), dist_Y.flatten())</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>        distance_correlations.append(corr)</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Silhouette score</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>        sil_score <span class="op">=</span> silhouette_score(Y, y)</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>        silhouette_scores.append(sil_score)</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Visualizar métricas</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    fig, (ax1, ax2) <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">18</span>, <span class="dv">6</span>))</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Correlación de distancias</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    ax1.plot(iterations, distance_correlations, <span class="st">'b-'</span>, label<span class="op">=</span><span class="st">'Correlación de Distancias'</span>, linewidth<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>    ax1.set_title(<span class="st">'Evolución de la Correlación de Distancias'</span>)</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    ax1.set_xlabel(<span class="st">'Iteración'</span>)</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>    ax1.set_ylabel(<span class="st">'Correlación de Spearman'</span>)</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    ax1.grid(<span class="va">True</span>)</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Silhouette score</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>    ax2.plot(iterations, silhouette_scores, <span class="st">'r-'</span>, label<span class="op">=</span><span class="st">'Silhouette Score'</span>, linewidth<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>    ax2.set_title(<span class="st">'Evolución del Silhouette Score'</span>)</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>    ax2.set_xlabel(<span class="st">'Iteración'</span>)</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    ax2.set_ylabel(<span class="st">'Silhouette Score'</span>)</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>    ax2.grid(<span class="va">True</span>)</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>    plt.suptitle(<span class="st">'Métricas de Convergencia'</span>, y<span class="op">=</span><span class="fl">1.05</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>    plt.tight_layout()</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>    plt.show()</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>plot_convergence_metrics(X, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="entrega_final_files/figure-html/convergence-analysis-output-1.png" id="convergence-analysis" class="img-fluid"></p>
+</section>
+<section id="efecto-de-los-hiperparámetros-de-t-sne" class="level3" data-number="3.5.3">
+<h3 data-number="3.5.3" class="anchored" data-anchor-id="efecto-de-los-hiperparámetros-de-t-sne"><span class="header-section-number">3.5.3</span> Efecto de los Hiperparámetros de t-SNE</h3>
+<div id="hyperparameter-effects" class="cell" data-execution_count="7">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_hyperparameter_effects(X, y):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Efecto de la perplejidad</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    perplexities <span class="op">=</span> [<span class="dv">5</span>, <span class="dv">30</span>, <span class="dv">50</span>]</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">20</span>, <span class="dv">6</span>))</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, perp <span class="kw">in</span> <span class="bu">enumerate</span>(perplexities):</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        tsne <span class="op">=</span> TSNE(n_components<span class="op">=</span><span class="dv">2</span>, </span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                   init<span class="op">=</span><span class="st">'random'</span>,</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                   random_state<span class="op">=</span><span class="dv">42</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                   perplexity<span class="op">=</span>perp)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        Y <span class="op">=</span> tsne.fit_transform(X)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        ax <span class="op">=</span> axes[i]</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        scatter <span class="op">=</span> ax.scatter(Y[:, <span class="dv">0</span>], Y[:, <span class="dv">1</span>], c<span class="op">=</span>y, cmap<span class="op">=</span><span class="st">'tab10'</span>, alpha<span class="op">=</span><span class="fl">0.7</span>, s<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        ax.set_title(<span class="ss">f'Perplexity = </span><span class="sc">{</span>perp<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        ax.axis(<span class="st">'off'</span>)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    plt.suptitle(<span class="st">'Efecto de la Perplejidad'</span>, y<span class="op">=</span><span class="fl">1.05</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    plt.tight_layout()</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    plt.show()</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Efecto del learning rate</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    learning_rates <span class="op">=</span> [<span class="dv">50</span>, <span class="dv">200</span>, <span class="dv">1000</span>]</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">20</span>, <span class="dv">6</span>))</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, lr <span class="kw">in</span> <span class="bu">enumerate</span>(learning_rates):</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>        tsne <span class="op">=</span> TSNE(n_components<span class="op">=</span><span class="dv">2</span>, </span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>                   init<span class="op">=</span><span class="st">'random'</span>,</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>                   random_state<span class="op">=</span><span class="dv">42</span>,</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>                   learning_rate<span class="op">=</span>lr)</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>        Y <span class="op">=</span> tsne.fit_transform(X)</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>        ax <span class="op">=</span> axes[i]</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>        scatter <span class="op">=</span> ax.scatter(Y[:, <span class="dv">0</span>], Y[:, <span class="dv">1</span>], c<span class="op">=</span>y, cmap<span class="op">=</span><span class="st">'tab10'</span>, alpha<span class="op">=</span><span class="fl">0.7</span>, s<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>        ax.set_title(<span class="ss">f'Learning Rate = </span><span class="sc">{</span>lr<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>        ax.axis(<span class="st">'off'</span>)</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>    plt.suptitle(<span class="st">'Efecto del Learning Rate'</span>, y<span class="op">=</span><span class="fl">1.05</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>    plt.tight_layout()</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>    plt.show()</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>plot_hyperparameter_effects(X, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="entrega_final_files/figure-html/hyperparameter-effects-output-1.png" id="hyperparameter-effects-1" class="img-fluid"> <img src="entrega_final_files/figure-html/hyperparameter-effects-output-2.png" id="hyperparameter-effects-2" class="img-fluid"></p>
+</div>
+</section>
+</section>
+<section id="implementación-y-análisis-de-umap" class="level2" data-number="3.6">
+<h2 data-number="3.6" class="anchored" data-anchor-id="implementación-y-análisis-de-umap"><span class="header-section-number">3.6</span> Implementación y Análisis de UMAP</h2>
+<p>Aplicaremos UMAP al mismo dataset, explorando el efecto de sus hiperparámetros clave en la visualización y comparándolo con t-SNE.</p>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> umap <span class="co"># Importar la librería UMAP</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt <span class="co"># Importar matplotlib aquí también</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Asegurar que los datos X y y estén cargados</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    X</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    y</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">NameError</span>:</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="im">from</span> sklearn <span class="im">import</span> datasets</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    digits <span class="op">=</span> datasets.load_digits(n_class<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> digits.data</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> digits.target</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Aplicar UMAP con parámetros por defecto o iniciales</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>umap_reducer <span class="op">=</span> umap.UMAP(n_components<span class="op">=</span><span class="dv">2</span>, </span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>                          random_state<span class="op">=</span><span class="dv">42</span>, </span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>                          n_neighbors<span class="op">=</span><span class="dv">15</span>, </span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>                          min_dist<span class="op">=</span><span class="fl">0.1</span>)</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>X_umap <span class="op">=</span> umap_reducer.fit_transform(X)</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualizar el resultado inicial de UMAP</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_umap_embedding(X_umap, y, title<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="co">    Visualiza el embedding UMAP.</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    plt.figure(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">10</span>))</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>    ax <span class="op">=</span> plt.subplot(<span class="dv">111</span>)</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>    scatter <span class="op">=</span> ax.scatter(X_umap[:, <span class="dv">0</span>], X_umap[:, <span class="dv">1</span>], c<span class="op">=</span>y, cmap<span class="op">=</span><span class="st">'tab10'</span>, alpha<span class="op">=</span><span class="fl">0.7</span>, s<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    ax.set_title(title <span class="cf">if</span> title <span class="cf">else</span> <span class="st">'Visualización UMAP de Dígitos'</span>, pad<span class="op">=</span><span class="dv">20</span>, fontsize<span class="op">=</span><span class="dv">14</span>)</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    ax.set_xlabel(<span class="st">'Componente UMAP 1'</span>)</span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    ax.set_ylabel(<span class="st">'Componente UMAP 2'</span>)</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>    ax.grid(<span class="va">True</span>)</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Añadir leyenda de colores</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>    legend_elements <span class="op">=</span> [plt.Line2D([<span class="dv">0</span>], [<span class="dv">0</span>], marker<span class="op">=</span><span class="st">'o'</span>, color<span class="op">=</span><span class="st">'w'</span>, </span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>                                 markerfacecolor<span class="op">=</span>plt.cm.Set1(i<span class="op">/</span><span class="fl">10.</span>), </span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>                                 label<span class="op">=</span><span class="bu">str</span>(i), markersize<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>                      <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>)]</span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>    plt.legend(handles<span class="op">=</span>legend_elements, title<span class="op">=</span><span class="st">"Dígitos"</span>, </span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>              loc<span class="op">=</span><span class="st">'center left'</span>, bbox_to_anchor<span class="op">=</span>(<span class="dv">1</span>, <span class="fl">0.5</span>))</span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>    plt.tight_layout()</span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>    plt.show()</span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>plot_umap_embedding(X_umap, y, <span class="st">"Visualización UMAP de Dígitos (n_neighbors=15, min_dist=0.1)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="entrega_final_files/figure-html/umap-implementation-output-1.png" id="umap-implementation" class="img-fluid"></p>
+<section id="efecto-de-los-hiperparámetros-de-umap" class="level3" data-number="3.6.1">
+<h3 data-number="3.6.1" class="anchored" data-anchor-id="efecto-de-los-hiperparámetros-de-umap"><span class="header-section-number">3.6.1</span> Efecto de los Hiperparámetros de UMAP</h3>
+<p>Para UMAP, dos de los hiperparámetros más influyentes son <code>n_neighbors</code> y <code>min_dist</code>. <code>n_neighbors</code> controla cuántos vecinos considera UMAP al construir el grafo inicial (valores más bajos se enfocan más en la estructura local, valores más altos en la global). <code>min_dist</code> controla la distancia mínima permitida entre puntos en el embedding (valores más bajos permiten agrupaciones más densas).</p>
+<div id="umap-hyperparameter-effects" class="cell" data-execution_count="9">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Efecto de n_neighbors</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>n_neighbors_values <span class="op">=</span> [<span class="dv">5</span>, <span class="dv">15</span>, <span class="dv">50</span>]</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">20</span>, <span class="dv">6</span>))</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, n_neighbors <span class="kw">in</span> <span class="bu">enumerate</span>(n_neighbors_values):</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    umap_reducer <span class="op">=</span> umap.UMAP(n_components<span class="op">=</span><span class="dv">2</span>, </span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>                              random_state<span class="op">=</span><span class="dv">42</span>, </span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>                              n_neighbors<span class="op">=</span>n_neighbors,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>                              min_dist<span class="op">=</span><span class="fl">0.1</span>) <span class="co"># Mantener min_dist constante</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    X_umap <span class="op">=</span> umap_reducer.fit_transform(X)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    ax <span class="op">=</span> axes[i]</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    scatter <span class="op">=</span> ax.scatter(X_umap[:, <span class="dv">0</span>], X_umap[:, <span class="dv">1</span>], c<span class="op">=</span>y, cmap<span class="op">=</span><span class="st">'tab10'</span>, alpha<span class="op">=</span><span class="fl">0.7</span>, s<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    ax.set_title(<span class="ss">f'n_neighbors = </span><span class="sc">{</span>n_neighbors<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    ax.axis(<span class="st">'off'</span>)</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>plt.suptitle(<span class="st">'Efecto de n_neighbors en la Proyección UMAP'</span>, y<span class="op">=</span><span class="fl">1.05</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Efecto de min_dist</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>min_dist_values <span class="op">=</span> [<span class="fl">0.0</span>, <span class="fl">0.1</span>, <span class="fl">0.5</span>]</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">20</span>, <span class="dv">6</span>))</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, min_dist <span class="kw">in</span> <span class="bu">enumerate</span>(min_dist_values):</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    umap_reducer <span class="op">=</span> umap.UMAP(n_components<span class="op">=</span><span class="dv">2</span>, </span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>                              random_state<span class="op">=</span><span class="dv">42</span>, </span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>                              n_neighbors<span class="op">=</span><span class="dv">15</span>, <span class="co"># Mantener n_neighbors constante</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>                              min_dist<span class="op">=</span>min_dist)</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>    X_umap <span class="op">=</span> umap_reducer.fit_transform(X)</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>    ax <span class="op">=</span> axes[i]</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>    scatter <span class="op">=</span> ax.scatter(X_umap[:, <span class="dv">0</span>], X_umap[:, <span class="dv">1</span>], c<span class="op">=</span>y, cmap<span class="op">=</span><span class="st">'tab10'</span>, alpha<span class="op">=</span><span class="fl">0.7</span>, s<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>    ax.set_title(<span class="ss">f'min_dist = </span><span class="sc">{</span>min_dist<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>    ax.axis(<span class="st">'off'</span>)</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>plt.suptitle(<span class="st">'Efecto de min_dist en la Proyección UMAP'</span>, y<span class="op">=</span><span class="fl">1.05</span>, fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="entrega_final_files/figure-html/umap-hyperparameter-effects-output-1.png" id="umap-hyperparameter-effects-1" class="img-fluid"> <img src="entrega_final_files/figure-html/umap-hyperparameter-effects-output-2.png" id="umap-hyperparameter-effects-2" class="img-fluid"></p>
+</div>
+</section>
+</section>
+<section id="análisis-comparativo-de-las-proyecciones-finales" class="level2" data-number="3.7">
+<h2 data-number="3.7" class="anchored" data-anchor-id="análisis-comparativo-de-las-proyecciones-finales"><span class="header-section-number">3.7</span> Análisis Comparativo de las Proyecciones Finales</h2>
+<p>Finalmente, compararemos las proyecciones finales obtenidas con t-SNE y UMAP utilizando métricas cuantitativas y visualizaciones lado a lado.</p>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargar datos si no están definidos (para asegurar X y y)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    X</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    y</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">NameError</span>:</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="im">from</span> sklearn <span class="im">import</span> datasets</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    digits <span class="op">=</span> datasets.load_digits(n_class<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> digits.data</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> digits.target</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Calcular la proyección t-SNE final dentro de este bloque</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>tsne_final <span class="op">=</span> TSNE(n_components<span class="op">=</span><span class="dv">2</span>, </span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>                  init<span class="op">=</span><span class="st">'random'</span>, </span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>                  random_state<span class="op">=</span><span class="dv">42</span>, </span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>                  perplexity<span class="op">=</span><span class="dv">30</span>, </span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>                  learning_rate<span class="op">=</span><span class="fl">200.0</span>, </span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>                  n_iter<span class="op">=</span><span class="dv">1000</span>)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>X_tsne <span class="op">=</span> tsne_final.fit_transform(X) <span class="co"># Calcular X_tsne</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Calcular la matriz de distancias</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co"># from sklearn.metrics.pairwise import euclidean_distances # Ya importado en setup</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>distances_original <span class="op">=</span> euclidean_distances(X)</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>distances_tsne <span class="op">=</span> euclidean_distances(X_tsne)</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Calcular Correlación de Spearman y p-valor</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="co"># from scipy.stats import spearmanr # Ya importado en setup</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>correlation, p_value <span class="op">=</span> spearmanr(distances_original.flatten(), distances_tsne.flatten())</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Correlación de Spearman entre distancias originales y t-SNE:"</span>)</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Coeficiente de correlación: </span><span class="sc">{</span>correlation<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"P-valor asociado: </span><span class="sc">{</span>p_value<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualizar la distribución de distancias</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>plt.hist(distances_original.flatten(), bins<span class="op">=</span><span class="dv">50</span>, alpha<span class="op">=</span><span class="fl">0.5</span>, label<span class="op">=</span><span class="st">'Original'</span>, density<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>plt.hist(distances_tsne.flatten(), bins<span class="op">=</span><span class="dv">50</span>, alpha<span class="op">=</span><span class="fl">0.5</span>, label<span class="op">=</span><span class="st">'t-SNE'</span>, density<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Distribución de Distancias Euclidianas'</span>)</span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Distancia'</span>)</span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Densidad Estimada'</span>)</span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>)</span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>Correlación de Spearman entre distancias originales y t-SNE: Coeficiente de correlación: 0.4209 P-valor asociado: 0.0000 <img src="entrega_final_files/figure-html/distance-analysis-output-2.png" id="distance-analysis" class="img-fluid"></p>
+</section>
+</section>
+<section id="conclusiones" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Conclusiones</h1>
+<p>El análisis t-SNE nos permite visualizar efectivamente la estructura de los datos de dígitos en un espacio de 2 dimensiones. Observamos que:</p>
+<ol type="1">
+<li>Los dígitos similares tienden a agruparse juntos en el espacio reducido</li>
+<li>La técnica preserva las relaciones de vecindad importantes</li>
+<li>La visualización resultante permite identificar patrones y clusters naturales en los datos</li>
+</ol>
+<p>El coeficiente de correlación de Spearman entre las distancias originales y las distancias en el espacio t-SNE, junto con su p-valor, proporciona una medida cuantitativa de qué tan bien se preservan las relaciones de similitud, apoyando las observaciones visuales de los clusters.</p>
+</section>
+<section id="referencias" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Referencias</h1>
+<ol type="1">
+<li>van der Maaten, L., &amp; Hinton, G. (2008). Visualizing Data using t-SNE. Journal of Machine Learning Research, 9, 2579-2605.</li>
+<li>scikit-learn: Machine Learning in Python, Pedregosa et al., JMLR 12, pp.&nbsp;2825-2830, 2011.</li>
+<li>https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.spearmanr.html</li>
+<li>https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise.euclidean_distances.html</li>
+<li>https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_score.html</li>
+</ol>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+    let newTheme = '';
+    if(darkModeDefault) {
+      newTheme = isAlternate ? baseTheme : alternateTheme;
+    } else {
+      newTheme = isAlternate ? alternateTheme : baseTheme;
+    }
+    const changeGiscusTheme = () => {
+      // From: https://github.com/giscus/giscus/issues/336
+      const sendMessage = (message) => {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+      }
+      sendMessage({
+        setConfig: {
+          theme: newTheme
+        }
+      });
+    }
+    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+    if (isGiscussLoaded) {
+      changeGiscusTheme();
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  const darkModeDefault = false;
+  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+    toggleGiscusIfUsed(toAlternate, darkModeDefault);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
