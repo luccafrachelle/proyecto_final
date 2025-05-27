@@ -50,17 +50,18 @@ def load_data():
 
 @st.cache_data
 def load_precomputed_configs():
-    tsne_configs_path = os.path.join(OUTPUT_DIR, 'tsne_configs.json')
-    umap_configs_path = os.path.join(OUTPUT_DIR, 'umap_configs.json')
+    config_path = os.path.join(OUTPUT_DIR, 'embeddings_config.json')
     
-    if not os.path.exists(tsne_configs_path) or not os.path.exists(umap_configs_path):
-        st.error("Error: No se encontraron los archivos de configuración precalculados.")
+    if not os.path.exists(config_path):
+        st.error("Error: No se encontró el archivo de configuración precalculado.")
         st.stop()
     
-    with open(tsne_configs_path, 'r') as f:
-        tsne_configs = json.load(f)
-    with open(umap_configs_path, 'r') as f:
-        umap_configs = json.load(f)
+    with open(config_path, 'r') as f:
+        all_configs = json.load(f)
+    
+    # Separar configuraciones por tipo
+    tsne_configs = [c for c in all_configs if c['type'] == 'tsne']
+    umap_configs = [c for c in all_configs if c['type'] == 'umap']
     
     return tsne_configs, umap_configs
 
@@ -69,11 +70,13 @@ def load_embedding(algo_type, params):
     if algo_type == 'tsne':
         perplexity = params['perplexity']
         learning_rate = params['learning_rate']
-        filename = f"tsne_p{perplexity}_lr{learning_rate:.0f}.joblib".replace(".", "p")
+        filename = f"tsne_p{perplexity}_lr{learning_rate:.0f}.npy"
     elif algo_type == 'umap':
         n_neighbors = params['n_neighbors']
         min_dist = params['min_dist']
-        filename = f"umap_nn{n_neighbors}_md{min_dist}".replace(".", "p") + ".joblib"
+        # Convertir min_dist a formato de 3 dígitos (0.001 -> 001)
+        min_dist_str = f"{min_dist:.3f}".split('.')[1]
+        filename = f"umap_nn{n_neighbors}_md0_{min_dist_str}_npy.npy"
     else:
         st.error("Tipo de algoritmo desconocido.")
         return None
@@ -84,7 +87,7 @@ def load_embedding(algo_type, params):
         st.warning(f"El embedding precalculado para {algo_type} con estos parámetros no se encontró.")
         return None
         
-    return joblib.load(filepath)
+    return np.load(filepath)
 
 # Cargar datos
 X, y, images = load_data()
@@ -111,7 +114,7 @@ def show_tsne_params():
     selected_perplexity = st.select_slider(
         "Perplexity",
         options=tsne_perplexities,
-        value=30,
+        value=5,  # Cambiar a 5 que es el primer valor disponible
         help="Controla el balance entre la estructura local y global"
     )
     
@@ -125,13 +128,12 @@ def show_tsne_params():
     
     # Parámetros fijos
     st.markdown("**Parámetros Fijos:**")
-    st.text(f"Iteraciones: {tsne_configs[0]['n_iter']}")
-    st.text(f"Inicialización: {tsne_configs[0]['init']}")
+    st.text(f"Tipo: {tsne_configs[0]['type']}")
     
     # Métricas de calidad
     st.markdown("---")
     st.markdown("**Métricas de Calidad:**")
-    show_metrics = st.checkbox("Mostrar métricas detalladas", value=False, key="tsne_metrics_tab") # Cambiar key
+    show_metrics = st.checkbox("Mostrar métricas detalladas", value=False, key="tsne_metrics_tab")
     
     return selected_perplexity, selected_learning_rate, show_metrics
 
@@ -143,7 +145,7 @@ def show_umap_params():
     selected_n_neighbors = st.select_slider(
         "Número de Vecinos",
         options=umap_n_neighbors,
-        value=15,
+        value=5,  # Cambiar a 5 que es el primer valor disponible
         help="Controla el balance entre estructura local y global"
     )
     
@@ -151,18 +153,18 @@ def show_umap_params():
     selected_min_dist = st.select_slider(
         "Distancia Mínima",
         options=umap_min_dist,
-        value=0.1,
+        value=0.001,  # Cambiar a 0.001 que es el primer valor disponible
         help="Controla qué tan compactos son los clusters"
     )
     
     # Parámetros fijos
     st.markdown("**Parámetros Fijos:**")
-    st.text(f"Componentes: {umap_configs[0]['n_components']}")
+    st.text(f"Tipo: {umap_configs[0]['type']}")
     
     # Métricas de calidad
     st.markdown("---")
     st.markdown("**Métricas de Calidad:**")
-    show_metrics = st.checkbox("Mostrar métricas detalladas", value=False, key="umap_metrics_tab") # Cambiar key
+    show_metrics = st.checkbox("Mostrar métricas detalladas", value=False, key="umap_metrics_tab")
     
     return selected_n_neighbors, selected_min_dist, show_metrics
 
@@ -184,9 +186,7 @@ with tab1:
         selected_tsne_params = {
             'perplexity': selected_perplexity,
             'learning_rate': selected_learning_rate,
-            'n_iter': tsne_configs[0]['n_iter'],
-            'init': tsne_configs[0]['init'],
-            'random_state': 42
+            'type': 'tsne'
         }
         X_tsne = load_embedding('tsne', selected_tsne_params)
         
@@ -271,8 +271,7 @@ with tab2:
         selected_umap_params = {
             'n_neighbors': selected_n_neighbors,
             'min_dist': selected_min_dist,
-            'n_components': 2,
-            'random_state': 42
+            'type': 'umap'
         }
         X_umap = load_embedding('umap', selected_umap_params)
 
