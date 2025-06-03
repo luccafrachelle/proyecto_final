@@ -1,9 +1,10 @@
 ---
-title: "Análisis Teórico y Aplicación de t-SNE en Visualización de Datos"
-author: "Lucca Frachelle"
-date: "2025-05-26"
+title: "Entrega Final"
+author: "Lucca Frachelle , Cecilia Waksman"
+date: "2025-06-02"
 warning: false
 message: false
+echo: false
 format: 
   html:
     toc: true
@@ -12,145 +13,101 @@ format:
     theme:
       light: flatly
       dark: darkly
-    code-fold: true
     fig-align: center
+    toc-float: true
+embed-resources: true
+toc-location: right
+toc-title: 'Contenido'
+
 ---
+
+```{python}
+#| label: setup
+#| output: false
+# Importar todas las librerías necesarias
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+from scipy.stats import norm
+from sklearn.manifold import TSNE
+from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.metrics import silhouette_score
+from scipy.stats import spearmanr
+from IPython.display import display, HTML
+
+# Configuración de estilo consistente para todos los gráficos
+plt.style.use('seaborn-v0_8')
+sns.set_palette("husl")
+plt.rcParams['figure.figsize'] = [15, 10]
+plt.rcParams['font.size'] = 12
+plt.rcParams['axes.facecolor'] = '#EAEAEA'
+plt.rcParams['figure.facecolor'] = 'white'
+plt.rcParams['grid.color'] = '#CCCCCC'
+plt.rcParams['grid.linestyle'] = '--'
+plt.rcParams['grid.linewidth'] = 0.5
+plt.rcParams['axes.edgecolor'] = 'black'
+plt.rcParams['axes.linewidth'] = 0.8
+plt.rcParams['xtick.color'] = 'black'
+plt.rcParams['ytick.color'] = 'black'
+plt.rcParams['text.color'] = 'black'
+plt.rcParams['axes.labelcolor'] = 'black'
+plt.rcParams['axes.titlecolor'] = 'black'
+
+# Definir colores y estilos consistentes
+COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c']  # Colores para los clusters
+CLUSTER_NAMES = ['Cluster 1', 'Cluster 2', 'Cluster 3']
+```
 
 # Introducción
 
-Este trabajo presenta un análisis detallado de la técnica t-SNE (t-Distributed Stochastic Neighbor Embedding), una herramienta fundamental en la visualización de datos de alta dimensionalidad. El objetivo es proporcionar una comprensión profunda de los fundamentos matemáticos y su aplicación práctica en el análisis de datos.
+A medida que el volumen y la complejidad de los datos han crecido exponencialmente en la era digital, la **reducción de dimensionalidad** se ha convertido en una técnica indispensable. Su objetivo es transformar datos de alta dimensión en una representación de menor dimensión, preservando al máximo la información relevante y la estructura inherente de los datos. Esta tarea es crucial no solo para la visualización y la comprensión de patrones, sino también para mejorar la eficiencia computacional de algoritmos de aprendizaje automático posteriores y para mitigar la "maldición de la dimensionalidad".
 
-# Fundamentos Teóricos de la Reducción de Dimensionalidad
+## Enfoques para la Reducción de Dimensionalidad
 
-A continuación, se presenta un resumen de la matemática presente en los algoritmos t-SNE y UMAP, con un enfoque didáctico en las ecuaciones, su interpretación, y explicaciones de conceptos clave como la función Softmax y la Divergencia Kullback-Leibler.
+Existen dos enfoques principales para la reducción de dimensionalidad:
 
-## Stochastic Neighbor Embedding (SNE) - Base de t-SNE
+1. **Factorización de Matrices:**
+   - **PCA (Análisis de Componentes Principales):** Descompone la matriz de datos en componentes principales
+   - **SVD (Descomposición en Valores Singulares):** Factoriza la matriz en matrices ortogonales
+   - **NMF (Non-negative Matrix Factorization):** Factorización con restricción de no negatividad
+   - Características:
+     * Basado en álgebra lineal
+     * Optimiza criterios globales (varianza, error de reconstrucción)
+     * Computacionalmente eficiente
+     * Menos sensible a ruido
 
-El t-SNE se basa en el Stochastic Neighbor Embedding (SNE). SNE convierte las distancias euclidianas entre puntos de datos en probabilidades condicionales que representan similitudes.
+2. **Grafos de Vecindad:**
+   - **t-SNE:** Construye un grafo de similitud basado en probabilidades
+   - **UMAP:** Construye un grafo de vecindad difuso basado en topología
+   - **LLE (Local Linear Embedding):** Preserva relaciones de vecindad local
+   - Características:
+     * Basado en teoría de grafos y topología
+     * Preserva estructura local de los datos
+     * Mejor para visualización y descubrimiento de clusters
+     * Puede ser computacionalmente más costoso
 
-### Probabilidades en el espacio de alta dimensión:
 
-La probabilidad de que el punto de datos $x_j$ sea un vecino del punto de datos $x_i$ se define como:
+# Fundamentos Teóricos 
 
-$$p_{j|i} = \frac{\exp(-\|x_i - x_j\|^2 / 2\sigma_i^2)}{\sum_{k \neq i} \exp(-\|x_i - x_k\|^2 / 2\sigma_i^2)}$$
+## La Función Softmax:
 
-donde:
-* $x_i$ y $x_j$ son puntos de datos en el espacio de alta dimensión.
-* $\|x_i - x_j\|^2$ es la distancia euclidiana al cuadrado entre $x_i$ y $x_j$.
-* $\sigma_i$ es la desviación estándar de una gaussiana centrada en $x_i$. Esta $\sigma_i$ se ajusta para que la perplejidad de la distribución de probabilidad condicional sea igual a una perplejidad predefinida por el usuario. La perplejidad se define como:
-$$\text{Perp}(P_i) = 2^{H(P_i)}$$
-donde $H(P_i)$ es la entropía de $P_i$ en bits:
-$$H(P_i) = -\sum_j p_{j|i} \log_2 p_{j|i}$$
+La función softmax es conocida por su uso de en redes neuronales para convertir números en cualquier escala a probabilidades que sumen 1.
 
-Es importante notar que $p_{i|i} = 0$.
-
-### Probabilidades en el espacio de baja dimensión:
-
-De manera similar, para los puntos $y_i$ y $y_j$ en el mapa de baja dimensión, se definen las probabilidades condicionales:
-
-$$q_{j|i} = \frac{\exp(-\|y_i - y_j\|^2)}{\sum_{k \neq i} \exp(-\|y_i - y_k\|^2)}$$
-
-Aquí no se usa la $\sigma_i$ porque se quiere que la escala de las distancias en el mapa sea libremente ajustada por el algoritmo.
-
-### Función de costo de SNE:
-
-SNE utiliza una función de costo basada en la divergencia Kullback-Leibler (KL) entre las distribuciones de probabilidad $P_i$ (en alta dimensión) y $Q_i$ (en baja dimensión):
-
-$$C = \sum_i \text{KL}(P_i || Q_i) = \sum_i \sum_j p_{j|i} \log \frac{p_{j|i}}{q_{j|i}}$$
-
-El objetivo es minimizar esta función de costo con respecto a las coordenadas $y_i$ en el mapa. La minimización se realiza mediante un descenso de gradiente.
-
-### Gradiente de la función de costo de SNE:
-
-El gradiente de la función de costo con respecto a $y_i$ es:
-
-$$\frac{\partial C}{\partial y_i} = \sum_j (p_{j|i} - q_{j|i} + p_{i|j} - q_{i|j})(y_i - y_j)$$
-
-## t-Distributed Stochastic Neighbor Embedding (t-SNE)
-
-t-SNE introduce dos mejoras principales sobre SNE:
-
-* **Simetría en las probabilidades:** En lugar de probabilidades condicionales asimétricas $p_{j|i}$, t-SNE utiliza probabilidades conjuntas simétricas $p_{ij}$.
-* **Distribución t de Student en baja dimensión:** Reemplaza la distribución gaussiana en el espacio de baja dimensión con una distribución t de Student con un grado de libertad.
-
-### Probabilidades conjuntas simétricas en alta dimensión:
-
-Las probabilidades $p_{ij}$ se calculan como la media de las probabilidades condicionales simetrizadas:
-
-$$p_{ij} = \frac{p_{j|i} + p_{i|j}}{2N}$$
-
-donde $N$ es el número de puntos de datos. Esto asegura que $\sum_{i \neq j} p_{ij} = 1$.
-Una alternativa para calcular $p_{ij}$ es:
-$$p_{ij} = \frac{\exp(-\|x_i - x_j\|^2 / 2\sigma^2)}{\sum_{k \neq l} \exp(-\|x_k - x_l\|^2 / 2\sigma^2)}$$
-La perplejidad se define como para SNE, pero ahora para la distribución simétrica $P_i$.
-
-### Probabilidades conjuntas usando una distribución t de Student en baja dimensión:
-
-Las probabilidades $q_{ij}$ en el espacio de baja dimensión se definen utilizando una distribución t de Student con un grado de libertad (que es la distribución de Cauchy):
-
-$$q_{ij} = \frac{(1 + \|y_i - y_j\|^2)^{-1}}{\sum_{k \neq l} (1 + \|y_k - y_l\|^2)^{-1}}$$
-
-El uso de la distribución t de Student es crucial para t-SNE. La cola pesada de la distribución t de Student permite que las distancias moderadamente grandes en el espacio de alta dimensión se mapeen a distancias mayores en el espacio de baja dimensión. Esto ayuda a resolver el "problema de hacinamiento" (crowding problem) donde los puntos cercanos en alta dimensión tienden a aglomerarse en el centro del mapa de baja dimensión.
-
-### Función de costo de t-SNE:
-
-La función de costo de t-SNE es nuevamente una divergencia KL, pero ahora entre las probabilidades conjuntas $P$ y $Q$:
-
-$$C = \text{KL}(P || Q) = \sum_i \sum_j p_{ij} \log \frac{p_{ij}}{q_{ij}}$$
-
-### Gradiente de la función de costo de t-SNE:
-
-El gradiente de la función de costo de t-SNE con respecto a $y_i$ es:
-
-$$\frac{\partial C}{\partial y_i} = 4 \sum_j (p_{ij} - q_{ij})(y_i - y_j)(1 + \|y_i - y_j\|^2)^{-1}$$
-
-Este gradiente tiene una forma intuitiva: es una suma de fuerzas que empujan o tiran de los puntos $y_i$.
-* Si $p_{ij} > q_{ij}$, los puntos $i$ y $j$ están más cerca en el espacio de alta dimensión de lo que están en el mapa. Esto crea una fuerza atractiva ($y_i - y_j$) que los acerca en el mapa.
-* Si $p_{ij} < q_{ij}$, los puntos $i$ y $j$ están más lejos en el espacio de alta dimensión. Esto crea una fuerza repulsiva (que se ve afectada por el término $(1 + \|y_i - y_j\|^2)^{-1}$) que los aleja.
-
-El término $(1 + \|y_i - y_j\|^2)^{-1}$ en el gradiente modera la fuerza de repulsión entre puntos que ya están suficientemente separados en el mapa, lo que es una característica clave para el "deshacinamiento" (uncrowding) y la formación de clústeres bien separados.
-
-## Algoritmo de Optimización
-
-El algoritmo de t-SNE utiliza un algoritmo de descenso de gradiente para minimizar la función de costo. Se aplican técnicas como:
-
-* **Momentum:** Para acelerar la convergencia y evitar mínimos locales. La actualización de las coordenadas $y_i$ en cada iteración $t$ es:
-    $$
-    Y^{(t)} = Y^{(t-1)} + \eta \frac{\partial C}{\partial Y} + \alpha(t) (Y^{(t-1)} - Y^{(t-2)})
-    $$
-    donde $\eta$ es la tasa de aprendizaje y $\alpha(t)$ es el término de momentum.
-* **Ajuste del learning rate:** Se suele usar un learning rate que se incrementa en las primeras iteraciones y luego se mantiene constante.
-* **Inicialización:** Los puntos $y_i$ se inicializan aleatoriamente de una distribución normal con una pequeña varianza.
-
-## Extensiones y Variaciones
-
-El artículo también discute extensiones como:
-
-* **t-SNE para conjuntos de datos grandes:** Se propone una técnica de random walks en grafos de vecindad para manejar grandes volúmenes de datos, donde solo un subconjunto de puntos se visualiza directamente, pero la estructura global influye en el embedding.
-* **t-SNE con costos de incrustación tempranos (early exaggeration):** Multiplicar los $p_{ij}$ por un factor (ej. 4 o 12) en las primeras iteraciones para crear clústeres más compactos y evitar que se formen "mini-clústeres" que no se pueden separar más tarde.
-    $$
-    p'_{ij} = p_{ij} \times \text{exaggeration\_factor}
-    $$
-    para las primeras $T$ iteraciones.
-
-## La Función Softmax: Convirtiendo Números en Probabilidades
-
-Imagina que estás construyendo un modelo de inteligencia artificial para clasificar imágenes. Quieres que el modelo diga si una imagen es un "gato", un "perro" o un "pájaro". Al final de las "neuronas" de tu modelo, obtendrás unos números crudos, a menudo llamados "logits". Estos logits pueden ser cualquier valor real (negativos, positivos, grandes, pequeños).
-
-**El problema:** ¿Cómo transformamos estos números crudos en probabilidades significativas que sumen 1? Por ejemplo, si los logits para "gato", "perro" y "pájaro" son $[2.0, 1.0, 0.1]$, ¿qué significa eso en términos de probabilidad?
-
-Aquí es donde entra la **función Softmax**. Su trabajo es tomar un vector de números reales y transformarlo en una distribución de probabilidad, es decir, un vector de números entre 0 y 1 que suman 1.
+Su trabajo es tomar un vector de números reales y transformarlo en una distribución de probabilidad, es decir, un vector de números entre 0 y 1 que suman 1.
 
 La fórmula de Softmax para un vector $z = [z_1, z_2, \dots, z_K]$ es:
 
 $$\text{Softmax}(z_i) = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}}$$
 
 donde:
-* $z_i$ es el $i$-ésimo elemento del vector de entrada.
-* $e$ es la base del logaritmo natural (aproximadamente 2.71828).
-* La sumatoria en el denominador va sobre todos los elementos del vector $z$.
 
-**¿Cómo funciona?**
+* $z_i$ es el $i$-ésimo elemento del vector de entrada.
+
+* $K$ es el número de elementos en el vector de entrada.
+
+
+Como funciona?
 
 1.  **Exponenciación:** Primero, toma la exponencial de cada número de entrada ($e^{z_i}$). Esto hace que todos los números sean positivos. Además, magnifica las diferencias: un número ligeramente mayor se vuelve mucho más grande que uno ligeramente menor después de la exponenciación.
 2.  **Normalización:** Luego, divide cada valor exponencial por la suma de *todos* los valores exponenciales. Esto asegura que todos los números resultantes estén entre 0 y 1 y que su suma sea exactamente 1.
@@ -179,10 +136,7 @@ $z = [z_{\text{gato}}, z_{\text{perro}}, z_{\text{pájaro}}] = [2.0, 1.0, 0.1]$
 
 El vector de probabilidades resultante es aproximadamente $[0.659, 0.242, 0.099]$.
 
-**Interpretación:**
-Esto nos dice que el modelo está "65.9% seguro" de que la imagen es un gato, "24.2% seguro" de que es un perro y "9.9% seguro" de que es un pájaro. La suma de estas probabilidades es $0.659 + 0.242 + 0.099 = 1.000$.
-
-La función Softmax es crucial en las redes neuronales para la clasificación, ya que proporciona una manera de interpretar las salidas crudas del modelo como probabilidades sobre las diferentes clases.
+En el caso de t-sne la función softmax se usa para convertir las distancias euclidianas en probabilidades de pertenencia a un cluster.
 
 ## La Divergencia Kullback-Leibler (KL): Midiendo la Diferencia entre Distribuciones
 
@@ -195,8 +149,11 @@ La fórmula de la KL-Divergencia de una distribución $Q$ con respecto a una dis
 $$\text{KL}(P || Q) = \sum_i P(i) \log \left( \frac{P(i)}{Q(i)} \right)$$
 
 donde:
+
 * $P(i)$ es la probabilidad de que el evento $i$ ocurra en la distribución $P$.
+
 * $Q(i)$ es la probabilidad de que el evento $i$ ocurra en la distribución $Q$.
+
 * La suma se realiza sobre todos los posibles eventos o valores de la distribución.
 
 **¿Cómo funciona?**
@@ -204,9 +161,13 @@ donde:
 La KL-Divergencia es la esperanza del logaritmo de la razón de las probabilidades entre las dos distribuciones, donde la esperanza se toma sobre la distribución $P$.
 
 * **Si $P(i)$ y $Q(i)$ son similares para un $i$ dado:** $\frac{P(i)}{Q(i)}$ estará cerca de 1, y $\log(1) = 0$. Esto contribuye poco a la divergencia.
+
 * **Si $P(i)$ es grande pero $Q(i)$ es pequeña:** $\frac{P(i)}{Q(i)}$ será grande, y $\log(\text{grande})$ será un número positivo grande. Esto contribuye significativamente a la divergencia, penalizando fuertemente la situación en la que $Q$ asigna una probabilidad baja a un evento que es probable en $P$.
+
 * **Si $P(i)$ es pequeña pero $Q(i)$ es grande:** $\frac{P(i)}{Q(i)}$ será pequeña, y $\log(\text{pequeña})$ será un número negativo grande. Sin embargo, como $P(i)$ es pequeño, la contribución total $P(i) \log \left( \frac{P(i)}{Q(i)} \right)$ será pequeña o incluso cercana a cero.
+
 * **Si $P(i) = 0$ y $Q(i) \neq 0$:** La contribución es 0 (por definición de $\log(0/Q(i)) = \log(0)$ que es indefinido, pero el límite es $P(i)\log P(i)$ que tiende a 0).
+
 * **Si $P(i) \neq 0$ y $Q(i) = 0$:** La divergencia se vuelve infinita. Esto significa que si la distribución de referencia $P$ asigna alguna probabilidad a un evento, y la distribución $Q$ le asigna cero probabilidad, la KL-Divergencia es infinita. ¡Esto es una penalización muy fuerte y deseable en t-SNE! Significa que no podemos permitir que $Q$ no le dé probabilidad a algo que $P$ sí considera probable.
 
 **Ejemplo Numérico: Midiendo la No-Simetría de KL**
@@ -226,7 +187,7 @@ $Q = [0.1, 0.1, 0.1, 0.1, 0.1, 0.5]$
 $$\text{KL}(P || Q) = \sum_{i=1}^{6} P(i) \log \left( \frac{P(i)}{Q(i)} \right)$$
 
 * Para $i=1, \dots, 5$: $P(i) = \frac{1}{6}$, $Q(i) = 0.1$
-    * $\frac{P(i)}{Q(i)} = \frac{1/6}{0.1} = \frac{0.167}{0.1} \approx 1.67$
+    * $\frac{P(i)}{Q(i)} = \frac{0.167}{0.1} = \frac{0.167}{0.1} \approx 1.67$
     * $P(i) \log \left( \frac{P(i)}{Q(i)} \right) \approx 0.167 \times \log(1.67) \approx 0.167 \times 0.513 \approx 0.0857$ (para cada uno de los 5 casos)
 
 * Para $i=6$: $P(6) = \frac{1}{6}$, $Q(6) = 0.5$
@@ -256,79 +217,936 @@ $\text{KL}(Q || P) \approx (5 \times -0.0511) + 0.5475 = -0.2555 + 0.5475 = 0.29
 Como puedes ver, $\text{KL}(P || Q) \approx 0.2455$ y $\text{KL}(Q || P) \approx 0.292$.
 **$\text{KL}(P || Q) \neq \text{KL}(Q || P)$**. Esto demuestra claramente que la KL-Divergencia no es simétrica. El costo de modelar mal a $P$ usando $Q$ no es el mismo que el costo de modelar mal a $Q$ usando $P$.
 
-**Importancia en t-SNE:**
 
-En t-SNE, usamos $\text{KL}(P || Q)$. Esto significa que penalizamos fuertemente cuando $Q$ le da una probabilidad baja a pares de puntos que en alta dimensión ($P$) eran muy similares. Es decir, si $P_{ij}$ es grande (puntos $i$ y $j$ son vecinos cercanos en alta dimensión), pero $Q_{ij}$ es pequeño (puntos $i$ y $j$ están lejos en baja dimensión), la función de costo aumenta significativamente. Esto fuerza a t-SNE a preservar las relaciones de "vecindad" (cercanía) del espacio original.
+## Breve Introducción a la Topología Algebraica (para UMAP)
 
-La asimetría de la KL-Divergencia es una característica deseada en t-SNE. Si fuera simétrica, penalizaría tanto cuando $P$ asigna una probabilidad alta y $Q$ una baja, como cuando $P$ asigna una probabilidad baja y $Q$ una alta. Esto último no es lo que queremos. Queremos que los vecinos permanezcan vecinos, pero no nos importa tanto si los no-vecinos se acercan un poco si eso ayuda a acomodar a los verdaderos vecinos. La KL asimétrica, con la penalización pesada cuando $Q(i)$ es cero y $P(i)$ no, es ideal para esto.
+La topología algebraica y la teoría de conjuntos simpliciales son fundamentales para entender UMAP. Estos conceptos nos permiten modelar la estructura de los datos de una manera que preserva tanto las relaciones locales como globales.
 
-## Uniform Manifold Approximation and Projection (UMAP)
+### Conjuntos Simpliciales
 
-UMAP es una técnica de reducción de dimensionalidad no lineal relativamente nueva y muy potente, desarrollada por Leland McInnes, John Healy y James Melville en 2018. Su objetivo, similar al de t-SNE, es proyectar datos de alta dimensión en un espacio de menor dimensión (comúnmente 2D o 3D) para visualización o como un paso previo para otros algoritmos de aprendizaje automático. A diferencia de t-SNE, que se basa en probabilidades de similitud y divergencia KL, UMAP se fundamenta en conceptos de topología algebraica y teoría de la geometría riemanniana, lo que le confiere propiedades únicas en cuanto a velocidad y preservación de la estructura global.
+Un simplex es la generalización de un triángulo a dimensiones arbitrarias:
+- 0-simplex: un punto
+- 1-simplex: una línea
+- 2-simplex: un triángulo
+- 3-simplex: un tetraedro
+- Y así sucesivamente...
 
-### Fundamentos Matemáticos de UMAP
+Un conjunto simplicial es una colección de simplexes que se intersectan solo en sus caras comunes. En UMAP, usamos conjuntos simpliciales difusos, donde las conexiones entre puntos tienen pesos que representan la probabilidad de que exista una conexión.
 
-La teoría matemática subyacente a UMAP es considerablemente más compleja que la de t-SNE, extrayendo conceptos de áreas como la topología algebraica y la teoría de los conjuntos difusos. Sin embargo, su lógica puede entenderse en tres fases principales:
+### Geometría Riemanniana
 
-#### Construcción de un Grafo Ponderado en el Espacio de Alta Dimensión
+UMAP asume que los datos residen en una variedad (manifold) de baja dimensión incrustada en un espacio de alta dimensión. La geometría riemanniana nos permite:
+1. Definir distancias locales en la variedad
+2. Preservar la estructura topológica durante la proyección
+3. Manejar la curvatura de la variedad
 
-UMAP comienza construyendo un **grafo de vecindad difuso** (fuzzy simplicial set) en el espacio de alta dimensión. Este grafo busca modelar la estructura topológica de los datos, asumiendo que los datos residen en una variedad (manifold) de baja dimensión incrustada en el espacio de alta dimensión.
+### Construcción del Grafo de Vecindad
 
-#### Noción de Distancia y Conectividad Adaptativa
+UMAP construye un grafo de vecindad en el espacio de alta dimensión siguiendo estos pasos:
 
-Para cada punto de datos $x_i$, UMAP determina su "radio de vecindad" de una manera adaptativa, basándose en la distancia a su $k$-ésimo vecino más cercano, $\rho_i$. Este valor es fundamental para normalizar la distancia de los vecinos de $x_i$:
+1. **Cálculo de distancias locales:**
+   Para cada punto, se calcula la distancia a su k-ésimo vecino más cercano, que define el radio de vecindad local.
 
-* **Distancia al $k$-ésimo vecino:** Para cada punto $x_i$, se calcula la distancia $\rho_i$ al $k$-ésimo vecino más cercano. Esto asegura que la escala local de "cercanía" sea adaptativa a la densidad de los datos. En regiones densas, $\rho_i$ será pequeña; en regiones dispersas, será grande.
-* **Normalización de las distancias:** Las distancias entre $x_i$ y sus vecinos $x_j$ se escalan por $\sigma_i$, donde $\sigma_i$ es un valor calculado para asegurar que la suma de las probabilidades (o pesos) de los vecinos de $x_i$ es una constante (`min_dist` y `spread` en los parámetros de UMAP influyen en esto). Esta normalización es análoga a la perplejidad en t-SNE, pero su objetivo es generar un número consistente de "vecinos efectivos" para cada punto en el grafo.
+2. **Normalización de distancias:**
+   Las distancias se normalizan usando una función de kernel que convierte distancias en probabilidades de conexión.
 
-La conectividad (o peso) entre dos puntos $x_i$ y $x_j$ en el espacio de alta dimensión, $\mu_{ij}$, se define usando una función de "núcleo" (kernel) que incorpora esta escala adaptativa:
+3. **Simetrización del grafo:**
+   Se crea un grafo no dirigido combinando las conexiones en ambas direcciones.
 
-$$\mu_{ij} = \exp\left( - \frac{\text{dist}(x_i, x_j) - \rho_i}{\sigma_i} \right)$$
+### Función de Costo y Optimización
 
-#### Simetrización del Grafo Difuso
+La función de costo de UMAP se basa en la entropía cruzada entre dos distribuciones de probabilidad:
 
-El grafo inicial es dirigido y asimétrico (la conectividad de $x_i$ a $x_j$ no es necesariamente la misma que de $x_j$ a $x_i$). Para obtener un grafo de conectividad bidireccional, UMAP simetriza las conectividades utilizando una operación de unión probabilística (análoga a $(A \cup B) = A + B - AB$ para eventos independientes):
-
-$$w_{ij} = \mu_{ij} + \mu_{ji} - (\mu_{ij} \cdot \mu_{ji})$$
-
-Este $w_{ij}$ representa la "fuerza" de la conexión entre $x_i$ y $x_j$ en el espacio de alta dimensión, y está en el rango $[0, 1]$. Los bordes $(i, j)$ con $w_{ij} > 0$ forman el **grafo de conectividad de alta dimensión**.
-
-#### Construcción de un Grafo Ponderado en el Espacio de Baja Dimensión
-
-De manera similar, UMAP construye un grafo en el espacio de baja dimensión (embedding) $Y$. La función de conectividad para el espacio de baja dimensión, $q_{ij}$, se elige para que sea una función con "curvas" que se ajustan a las propiedades deseadas de la visualización, como la preservación de la estructura local y global. Una función común para $q_{ij}$ es:
-
-$$q_{ij} = (1 + a\|y_i - y_j\|^{2b})^{-1}$$
-
-donde:
-* $y_i$ y $y_j$ son los puntos correspondientes en el espacio de baja dimensión.
-* $a$ y $b$ son parámetros que controlan la forma de la curva de esta función. Estos parámetros se derivan de los parámetros de usuario `min_dist` (distancia mínima permitida entre puntos proyectados) y `spread` (dispersión de los puntos).
-    * `min_dist` controla la separación entre los clusters. Un `min_dist` pequeño permitirá que los puntos se agrupen más densamente.
-    * `spread` controla la escala de los clusters. Un `spread` pequeño comprimirá los clusters, mientras que uno grande los expandirá.
-
-Esta función permite que las distancias pequeñas en el embedding se mapeen a una mayor variabilidad (lo que ayuda a la separación de clusters) y que las distancias grandes se compriman (preservando la estructura global). A menudo se la compara con la t-Student, pero su forma paramétrica es más flexible y se ajusta a las necesidades topológicas.
-
-#### Optimización Estocástica para Coincidir los Grafos
-
-Finalmente, UMAP optimiza las coordenadas de los puntos en el espacio de baja dimensión $Y$ para que la estructura de su grafo $Q$ coincida lo más posible con la del grafo $W$ en el espacio de alta dimensión.
-
-UMAP define una función de costo que se minimiza utilizando un descenso de gradiente estocástico. Esta función de costo se inspira en la divergencia de la entropía cruzada binaria, pero está formulada para modelar la probabilidad de que un borde exista o no en ambos grafos:
-
-$$C = \sum_{i,j \text{ s.t. } i \neq j} \left[ w_{ij} \log \left( \frac{w_{ij}}{q_{ij}} \right) + (1-w_{ij}) \log \left( \frac{1-w_{ij}}{1-q_{ij}} \right) \right]$$
+$$C = \sum_{i,j} \left[ w_{ij} \log \left( \frac{w_{ij}}{q_{ij}} \right) + (1-w_{ij}) \log \left( \frac{1-w_{ij}}{1-q_{ij}} \right) \right]$$
 
 donde:
-* $w_{ij}$ es la conectividad (peso) entre $x_i$ y $x_j$ en el espacio de alta dimensión.
-* $q_{ij}$ es la conectividad entre $y_i$ y $y_j$ en el espacio de baja dimensión.
+- $w_{ij}$ es la probabilidad de conexión en el espacio de alta dimensión
+- $q_{ij}$ es la probabilidad de conexión en el espacio de baja dimensión
 
-El gradiente de esta función de costo impulsa la optimización. Tiene componentes de atracción y repulsión:
-* **Atracción:** Los puntos que son vecinos cercanos en alta dimensión ($w_{ij}$ alto) se atraen mutuamente en baja dimensión para aumentar $q_{ij}$ y reducir el costo. La fuerza de atracción es más fuerte cuando $w_{ij}$ es alto y $q_{ij}$ es bajo.
-* **Repulsión:** Los puntos que no son vecinos en alta dimensión ($w_{ij}$ bajo) se repelen en baja dimensión para disminuir $q_{ij}$ y reducir el costo. UMAP optimiza este proceso de forma eficiente muestreando cuidadosamente los "no-vecinos" para las fuerzas repulsivas, lo que contribuye a su velocidad.
+La optimización se realiza mediante descenso de gradiente estocástico, que es más eficiente que el método usado en t-SNE.
 
-La optimización es más eficiente que la de t-SNE por varias razones:
-* Se basa en un grafo esparcido (sparse graph), ya que solo considera un número limitado de vecinos para cada punto.
-* El descenso de gradiente estocástico solo actualiza un subconjunto de puntos por iteración.
-* La función de costo y su gradiente están diseñados para ser computacionalmente más amigables.
+# t-SNE: Teoría y Algoritmo
 
-### Comparación de Enfoques: t-SNE vs. UMAP (Teoría)
+## De SNE a t-SNE: Evolución del Algoritmo
+
+### Stochastic Neighbor Embedding (SNE)
+
+SNE fue el predecesor de t-SNE, desarrollado por Hinton y Roweis en 2002. El algoritmo se basa en convertir distancias euclidianas entre puntos en probabilidades de similitud. El proceso es el siguiente:
+
+La idea de SNE es poder representar un espacio de alta dimensionalidad en un espacio de baja dimensionalidad de manera que las relaciones de vecindad se preserven. Para ello se usa la función softmax para convertir las distancias euclidianas en probabilidades de similitud. El objetivo es que las probabilidades de similitud en el espacio de baja dimensionalidad sean similares a las del espacio de alta dimensionalidad.
+
+
+1. **Probabilidades en el espacio de alta dimensión:**
+   Para cada par de puntos $x_i$ y $x_j$ en el espacio de alta dimensión, se calcula la probabilidad condicional $p_{j|i}$ de que $x_i$ elija a $x_j$ como su vecino:
+
+   $$p_{j|i} = \frac{\exp(-\|x_i - x_j\|^2 / 2\sigma_i^2)}{\sum_{k \neq i} \exp(-\|x_i - x_k\|^2 / 2\sigma_i^2)}$$
+
+   donde $\sigma_i$ es la varianza de la distribución gaussiana centrada en $x_i$. Esta varianza se ajusta para cada punto $i$ de manera que la distribución de probabilidades $P_i$ tenga una perplejidad fija.
+
+2. **Probabilidades en el espacio de baja dimensión:**
+   De manera similar, para los puntos $y_i$ y $y_j$ en el espacio de baja dimensión:
+
+   $$q_{j|i} = \frac{\exp(-\|y_i - y_j\|^2)}{\sum_{k \neq i} \exp(-\|y_i - y_k\|^2)}$$
+
+   Aquí se usa una distribución gaussiana con varianza fija (1/2) para simplificar.
+
+3. **Función de costo:**
+   SNE minimiza la suma de las divergencias KL entre las distribuciones $P_i$ y $Q_i$:
+
+   $$C = \sum_i \text{KL}(P_i || Q_i) = \sum_i \sum_j p_{j|i} \log \frac{p_{j|i}}{q_{j|i}}$$
+
+La función de costo es lo que el algoritmo intenta minimizar, con la idea de que las probabilidades en el espacio de baja dimensionalidad sean similares a las del espacio de alta dimensionalidad.
+
+
+### Limitaciones de SNE
+
+SNE presentaba dos problemas principales:
+
+1. **Asimetría en las probabilidades:**
+   - Las probabilidades condicionales $p_{j|i}$ y $p_{i|j}$ no son iguales
+   - Esto puede llevar a resultados inconsistentes
+   - La función de costo es asimétrica respecto a $P$ y $Q$
+
+2. **El problema de hacinamiento (crowding problem):**
+   - En el espacio de baja dimensión, hay menos "espacio" disponible para que los puntos se separen y las probabilidades de vecindad sean similares a las del espacio de alta dimensionalidad.
+   - Los puntos tienden a aglomerarse en el centro
+   - La distribución gaussiana en baja dimensión no maneja bien este problema
+   - Las colas de la gaussiana decaen muy rápido ($e^{-x^2}$)
+
+### La Solución: t-SNE
+
+t-SNE resuelve estos problemas mediante :
+
+1. **Probabilidades conjuntas simétricas:**
+   - Reemplaza las probabilidades condicionales por probabilidades conjuntas
+   - $p_{ij} = \frac{p_{j|i} + p_{i|j}}{2N}$
+   - Esto asegura que $p_{ij} = p_{ji}$
+   - La función de costo se vuelve simétrica
+
+2. **Distribución t de Student en baja dimensión:**
+   - Reemplaza la distribución gaussiana por una t de Student con un grado de libertad
+   - La fórmula para $q_{ij}$ se convierte en:
+     $$q_{ij} = \frac{(1 + \|y_i - y_j\|^2)^{-1}}{\sum_{k \neq l} (1 + \|y_k - y_l\|^2)^{-1}}$$
+
+La distribución t de Student tiene "colas pesadas" (heavy tails), lo que significa que:
+- Asigna una probabilidad significativa a valores lejos de la media
+- Permite que puntos moderadamente separados en alta dimensión se mapeen a distancias mayores en baja dimensión
+- Crea más "espacio" en el centro del mapa
+- Evita la aglomeración excesiva de puntos
+
+La fórmula de la distribución t de Student con un grado de libertad es:
+$$f(x) = \frac{1}{\pi(1 + x^2)}$$
+
+Esta función tiene colas que decaen como $1/x^2$, lo que es más lento que la distribución gaussiana que decae como $e^{-x^2}$. Esta propiedad es clave para resolver el problema de hacinamiento.
+
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as stats
+
+
+x = np.linspace(-10, 10, 100)
+plt.plot(x, stats.t.pdf(x, 1), label='t-Student')
+plt.plot(x, stats.norm.pdf(x), label='Normal')
+plt.legend()
+plt.show()
+```
+
+
+### Función de Costo de t-SNE
+
+La función de costo de t-SNE es una divergencia KL entre las probabilidades conjuntas $P$ y $Q$:
+
+$$C = \text{KL}(P || Q) = \sum_i \sum_j p_{ij} \log \frac{p_{ij}}{q_{ij}}$$
+
+### Gradiente de la Función de Costo
+
+El gradiente de la función de costo con respecto a $y_i$ es:
+
+$$\frac{\partial C}{\partial y_i} = 4 \sum_j (p_{ij} - q_{ij})(y_i - y_j)(1 + \|y_i - y_j\|^2)^{-1}$$
+
+Este gradiente tiene una interpretación física intuitiva:
+- Si $p_{ij} > q_{ij}$: Los puntos $i$ y $j$ están más cerca en alta dimensión que en baja dimensión
+  * Se crea una fuerza atractiva que los acerca
+- Si $p_{ij} < q_{ij}$: Los puntos $i$ y $j$ están más lejos en alta dimensión que en baja dimensión
+  * Se crea una fuerza repulsiva que los aleja
+  * La fuerza se modera por el término $(1 + \|y_i - y_j\|^2)^{-1}$
+
+El término $(1 + \|y_i - y_j\|^2)^{-1}$ es crucial porque:
+- Modera la fuerza de repulsión entre puntos ya separados
+- Permite que los puntos se separen más fácilmente
+- Contribuye a la formación de clusters bien definidos
+
+## Algoritmo de Optimización
+El algoritmo de t-SNE utiliza un algoritmo de descenso de gradiente para minimizar la función de costo. Se aplican técnicas como:
+
+* **Momentum:** Para acelerar la convergencia y evitar mínimos locales. La actualización de las coordenadas $y_i$ en cada iteración $t$ es:
+    $$
+    Y^{(t)} = Y^{(t-1)} + \eta \frac{\partial C}{\partial Y} + \alpha(t) (Y^{(t-1)} - Y^{(t-2)})
+    $$
+    donde $\eta$ es la tasa de aprendizaje y $\alpha(t)$ es el término de momentum.
+* **Ajuste del learning rate:** Se suele usar un learning rate que se incrementa en las primeras iteraciones y luego se mantiene constante.
+* **Inicialización:** Los puntos $y_i$ se inicializan aleatoriamente de una distribución normal con una pequeña varianza.
+
+## Algoritmo de t-SNE
+El algoritmo de t-SNE se puede describir de la siguiente manera:
+
+**Algoritmo 1: Versión Simple de t-Distributed Stochastic Neighbor Embedding.**
+
+**Datos:** conjunto de datos $X = \{x_1, x_2,..., x_n\}$,
+parámetros de la función de costo: perplejidad $Perp$,
+parámetros de optimización: número de iteraciones $T$, tasa de aprendizaje $\eta$, momento $\alpha(t)$.
+
+**Resultado:** representación de baja dimensión $Y^{(T)} = \{y_1, y_2,..., y_n\}$.
+
+**Inicio:**
+
+1. calcular afinidades por pares $p_{j|i}$ con perplejidad $Perp$ (usando Ecuación 1)
+
+2. establecer $p_{ij} = \frac{p_{j|i} + p_{i|j}}{2n}$
+
+3. muestrear solución inicial $Y^{(0)} = \{y_1, y_2,..., y_n\}$ desde $\mathcal{N}(0,10^{-4}I)$
+
+4. para $t=1$ hasta $T$ hacer
+   a. calcular afinidades de baja dimensión $q_{ij}$ (usando Ecuación 4)
+   b. calcular gradiente $\frac{\partial C}{\partial Y}$ (usando Ecuación 5)
+   c. establecer $Y^{(t)} = Y^{(t-1)} + \eta\frac{\partial C}{\partial Y} + \alpha(t)(Y^{(t-1)} - Y^{(t-2)})$
+5. Fin
+
+La actualización de los puntos en cada iteración $t$ se realiza mediante la ecuación:
+
+$Y^{(t)} = Y^{(t-1)} + \eta\frac{\partial C}{\partial Y} + \alpha(t)(Y^{(t-1)} - Y^{(t-2)})$
+
+Donde:
+
+1. **$Y^{(t)}$**: Es la nueva posición de los puntos en la iteración $t$
+2. **$Y^{(t-1)}$**: Es la posición actual de los puntos
+3. **$\eta$**: Es la tasa de aprendizaje (learning rate)
+4. **$\frac{\partial C}{\partial Y}$**: Es el gradiente de la función de costo
+5. **$\alpha(t)$**: Es el término de momento
+6. **$(Y^{(t-1)} - Y^{(t-2)})$**: Es el cambio en la posición del paso anterior
+
+El movimiento de los puntos está determinado por dos componentes principales:
+
+1. **Término del gradiente ($\eta\frac{\partial C}{\partial Y}$)**: 
+   - Mueve los puntos en la dirección que minimiza la divergencia KL
+   - Los puntos se mueven para preservar la estructura de vecindad
+   - Si dos puntos están cerca en el espacio original, tenderán a moverse uno hacia el otro
+   - Si dos puntos están lejos en el espacio original, tenderán a alejarse
+
+2. **Término de momento ($\alpha(t)(Y^{(t-1)} - Y^{(t-2)})$)**:
+   - Ayuda a evitar mínimos locales
+   - Mantiene cierta "inercia" del movimiento anterior
+   - Ayuda a que la optimización sea más estable
+   - El factor $\alpha(t)$ controla cuánto del movimiento anterior se mantiene
+
+### Variante con Inicialización PCA
+
+Una variante común del algoritmo t-SNE utiliza PCA (Análisis de Componentes Principales) para inicializar los puntos en lugar de usar una distribución normal aleatoria. Esta variante tiene las siguientes características:
+
+1. **Inicialización con PCA**:
+   - En lugar de $Y^{(0)} \sim \mathcal{N}(0,10^{-4}I)$, se usa $Y^{(0)} = \text{PCA}(X)$
+   - Esto proporciona una mejor posición inicial que preserva la estructura global de los datos
+   - Puede acelerar la convergencia del algoritmo
+   - Ayuda a evitar mínimos locales pobres
+
+### Ejemplo del algoritmo
+
+A continuación, implementaremos t-SNE paso a paso para proyectar datos de $\mathbb{R}^2$ a $\mathbb{R}^1$. Generaremos tres distribuciones normales con diferentes medias y varianzas, y seguiremos el proceso de optimización en diferentes iteraciones.
+
+```{python}
+#| label: tsne-example
+#| output: asis
+# 1. Generar datos sintéticos
+np.random.seed(42)
+n_points = 100
+
+cluster1 = np.random.normal(loc=[0, 0], scale=0.5, size=(n_points, 2))
+cluster2 = np.random.normal(loc=[3, 3], scale=0.7, size=(n_points, 2))
+cluster3 = np.random.normal(loc=[-3, 3], scale=0.6, size=(n_points, 2))
+
+X = np.vstack([cluster1, cluster2, cluster3])
+labels = np.array([0]*n_points + [1]*n_points + [2]*n_points)
+
+# 2. Visualizar datos originales
+plt.figure(figsize=(8, 6))
+plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis', alpha=0.7)
+plt.title('Datos Originales en R²', fontsize=14, fontweight='bold', pad=20)
+plt.xlabel('X', fontsize=12)
+plt.ylabel('Y', fontsize=12)
+plt.colorbar(label='Cluster')
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: tsne-custom-functions
+#| output: false
+# Funciones auxiliares para t-SNE
+def compute_p_ij(X, perplexity=30):
+    """Calcular probabilidades en alta dimensión P_j|i"""
+    n = X.shape[0]
+    distances = np.sum((X[:, np.newaxis] - X[np.newaxis, :])**2, axis=2)
+    p_ij = np.zeros((n, n))
+    
+    for i in range(n):
+        beta = 1.0
+        betamin = -np.inf
+        betamax = np.inf
+        
+        for iteration in range(50):
+            p_i = np.exp(-distances[i] * beta)
+            p_i[i] = 0
+            
+            sum_pi = np.sum(p_i)
+            if sum_pi == 0:
+                p_i = np.ones(n) / n
+                sum_pi = 1.0
+            
+            p_i = p_i / sum_pi
+            
+            entropy = -np.sum(p_i[p_i > 1e-10] * np.log2(p_i[p_i > 1e-10]))
+            current_perplexity = 2**entropy
+            
+            perplexity_diff = current_perplexity - perplexity
+            if abs(perplexity_diff) < 1e-5:
+                break
+                
+            if perplexity_diff > 0:
+                betamin = beta
+                beta = (beta + betamax) / 2 if betamax != np.inf else beta * 2
+            else:
+                betamax = beta
+                beta = (beta + betamin) / 2 if betamin != -np.inf else beta / 2
+        
+        p_ij[i] = p_i
+    
+    p_ij = (p_ij + p_ij.T) / (2 * n)
+    p_ij = np.maximum(p_ij, 1e-12)
+    
+    return p_ij
+
+def compute_q_ij(Y):
+    """Calcular probabilidades en baja dimensión usando distribución t-Student"""
+    n = Y.shape[0]
+    distances_sq = np.sum((Y[:, np.newaxis] - Y[np.newaxis, :])**2, axis=2)
+    
+    q_ij = (1 + distances_sq)**(-1)
+    np.fill_diagonal(q_ij, 0)
+    
+    sum_q = np.sum(q_ij)
+    if sum_q > 0:
+        q_ij = q_ij / sum_q
+    else:
+        q_ij = np.ones_like(q_ij) / (n * (n-1))
+        np.fill_diagonal(q_ij, 0)
+    
+    return q_ij
+
+def compute_gradient(p_ij, q_ij, Y):
+    """Calcular gradiente de la función de costo KL"""
+    n, dim = Y.shape
+    gradient = np.zeros_like(Y)
+    
+    Y_diff = Y[:, np.newaxis, :] - Y[np.newaxis, :, :]
+    distances_sq = np.sum(Y_diff**2, axis=2)
+    inv_distances = (1 + distances_sq)**(-1)
+    pq_diff = p_ij - q_ij
+    
+    for d in range(dim):
+        gradient[:, d] = 4 * np.sum(
+            pq_diff[:, :, np.newaxis] * Y_diff[:, :, d:d+1] * inv_distances[:, :, np.newaxis],
+            axis=1
+        ).flatten()
+    
+    return gradient
+
+def tsne_custom(X, n_components=1, perplexity=30, iterations_to_save=[1, 10, 25, 50, 100, 250, 500, 1000], 
+                learning_rate=200, early_exaggeration=12, momentum=0.8):
+    """Implementación personalizada de t-SNE que guarda estados intermedios"""
+    n_samples = X.shape[0]
+    max_iter = max(iterations_to_save)
+    
+    Y = np.random.normal(0, 1e-4, (n_samples, n_components))
+    Y_prev = Y.copy()
+    
+    p_ij = compute_p_ij(X, perplexity)
+    p_ij_exag = p_ij * early_exaggeration
+    
+    results = {}
+    
+    for i in range(max_iter):
+        current_p = p_ij_exag if i < 250 else p_ij
+        q_ij = compute_q_ij(Y)
+        gradient = compute_gradient(current_p, q_ij, Y)
+        
+        Y_new = Y - learning_rate * gradient + momentum * (Y - Y_prev)
+        Y_prev = Y.copy()
+        Y = Y_new
+        
+        current_iter = i + 1
+        if current_iter in iterations_to_save:
+            kl_div = np.sum(p_ij * np.log((p_ij + 1e-12) / (q_ij + 1e-12)))
+            results[current_iter] = {
+                'embedding': Y.copy().flatten(),
+                'kl_divergence': kl_div
+            }
+    
+    return results
+```
+
+```{python}
+#| label: tsne-execution
+#| output: false
+# Ejecutar t-SNE personalizado
+iterations_to_show = [1, 10, 25, 50, 100, 250, 500, 1000]
+tsne_results = tsne_custom(X, n_components=1, iterations_to_save=iterations_to_show,
+                          learning_rate=200, perplexity=15)
+```
+
+```{python}
+#| label: tsne-visualization-1
+#| output: asis
+# Visualizar primeras 4 iteraciones
+fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+axes = axes.flatten()
+
+for idx, n_iter in enumerate(iterations_to_show[:4]):
+    ax = axes[idx]
+    Y_1d = tsne_results[n_iter]['embedding']
+    kl_div = tsne_results[n_iter]['kl_divergence']
+    
+    for i, (color, name) in enumerate(zip(COLORS, CLUSTER_NAMES)):
+        mask = labels == i
+        ax.scatter(Y_1d[mask], np.zeros(np.sum(mask)), c=color, label=name if idx == 0 else "", 
+                  alpha=0.4, s=25)
+    
+    for i in range(3):
+        cluster_center = np.mean(Y_1d[labels == i])
+        ax.axvline(cluster_center, color=COLORS[i], alpha=0.6, linestyle='--', linewidth=2)
+        ax.text(cluster_center, 0.05, f'C{i+1}', ha='center', va='bottom', 
+                color=COLORS[i], fontweight='bold', fontsize=10)
+    
+    ax.set_title(f'Iteración {n_iter}\nKL div: {kl_div:.3f}', fontsize=12, fontweight='bold')
+    ax.set_xlabel('Coordenada t-SNE (R¹)', fontsize=10)
+    ax.set_ylabel('')
+    ax.set_yticks([])
+    ax.set_ylim(-0.1, 0.1)
+    ax.grid(True, alpha=0.3, axis='x')
+    
+    if idx == 0:
+        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+
+plt.suptitle('Evolución de t-SNE Personalizado (Iteraciones 1-50)', fontsize=14, fontweight='bold', y=1.02)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: tsne-visualization-2
+#| output: asis
+# Visualizar últimas 4 iteraciones
+fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+axes = axes.flatten()
+
+for idx, n_iter in enumerate(iterations_to_show[4:]):
+    ax = axes[idx]
+    Y_1d = tsne_results[n_iter]['embedding']
+    kl_div = tsne_results[n_iter]['kl_divergence']
+    
+    for i, (color, name) in enumerate(zip(COLORS, CLUSTER_NAMES)):
+        mask = labels == i
+        ax.scatter(Y_1d[mask], np.zeros(np.sum(mask)), c=color, label=name if idx == 0 else "", 
+                  alpha=0.4, s=25)
+    
+    for i in range(3):
+        cluster_center = np.mean(Y_1d[labels == i])
+        ax.axvline(cluster_center, color=COLORS[i], alpha=0.6, linestyle='--', linewidth=2)
+        ax.text(cluster_center, 0.05, f'C{i+1}', ha='center', va='bottom', 
+                color=COLORS[i], fontweight='bold', fontsize=10)
+    
+    ax.set_title(f'Iteración {n_iter}\nKL div: {kl_div:.3f}', fontsize=12, fontweight='bold')
+    ax.set_xlabel('Coordenada t-SNE (R¹)', fontsize=10)
+    ax.set_ylabel('')
+    ax.set_yticks([])
+    ax.set_ylim(-0.1, 0.1)
+    ax.grid(True, alpha=0.3, axis='x')
+    
+    if idx == 0:
+        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+
+plt.suptitle('Evolución de t-SNE Personalizado (Iteraciones 100-1000)', fontsize=14, fontweight='bold', y=1.02)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: tsne-convergence
+#| output: asis
+# Gráfico de convergencia (KL divergence vs iteraciones)
+plt.figure(figsize=(10, 6))
+iterations = sorted(tsne_results.keys())
+kl_divergences = [tsne_results[iter]['kl_divergence'] for iter in iterations]
+
+plt.plot(iterations, kl_divergences, 'bo-', linewidth=2, markersize=8)
+plt.xlabel('Número de Iteraciones', fontsize=12)
+plt.ylabel('KL Divergence', fontsize=12)
+plt.title('Convergencia de t-SNE', fontsize=14, fontweight='bold')
+plt.grid(True, alpha=0.3)
+plt.yscale('log')
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: tsne-cluster-analysis
+#| output: asis
+# Análisis de separación de clusters en DataFrame
+cluster_analysis = []
+
+for n_iter in iterations_to_show:
+    Y_1d = tsne_results[n_iter]['embedding']
+    
+    # Calcular centros de clusters
+    centers = []
+    for i in range(3):
+        center = np.mean(Y_1d[labels == i])
+        centers.append(center)
+    
+    # Calcular distancias entre centros
+    distances = []
+    for i in range(3):
+        for j in range(i+1, 3):
+            dist = abs(centers[i] - centers[j])
+            distances.append(dist)
+    
+    avg_separation = np.mean(distances)
+    
+    # Calcular varianza intra-cluster
+    intra_cluster_var = []
+    for i in range(3):
+        cluster_points = Y_1d[labels == i]
+        center = centers[i]
+        squared_distances = (cluster_points - center) ** 2
+        variance = np.mean(squared_distances)
+        intra_cluster_var.append(variance)
+    
+    avg_intra_var = np.mean(intra_cluster_var)
+    separation_ratio = avg_separation / (avg_intra_var + 1e-10)
+    
+    cluster_analysis.append({
+        'Iteración': n_iter,
+        'Separación Promedio': avg_separation,
+        'Varianza Intra-cluster': avg_intra_var,
+        'Ratio de Separación': separation_ratio
+    })
+
+# Crear DataFrame con el análisis
+df_cluster_analysis = pd.DataFrame(cluster_analysis)
+
+# Formatear el DataFrame para mejor visualización
+df_cluster_analysis = df_cluster_analysis.round(3)
+
+# Mostrar el DataFrame con estilo
+styled_df = df_cluster_analysis.style.set_properties(**{
+    'text-align': 'center',
+    'font-size': '12pt',
+    'padding': '5px'
+}).set_table_styles([
+    {'selector': 'th',
+     'props': [('background-color', '#f0f0f0'),
+               ('font-weight', 'bold'),
+               ('text-align', 'center'),
+               ('padding', '5px')]},
+    {'selector': 'td',
+     'props': [('text-align', 'center'),
+               ('padding', '5px')]}
+])
+
+display(styled_df)
+```
+
+
+Este ejemplo muestra:
+
+1. **Generación de datos:**
+   - Tres clusters gaussianos en $\mathbb{R}^2$
+   - Cada cluster tiene 100 puntos
+   - Diferentes medias y varianzas para cada cluster
+
+2. **Implementación paso a paso:**
+   - Cálculo de probabilidades en alta dimensión ($p_{ij}$)
+   - Cálculo de probabilidades en baja dimensión ($q_{ij}$)
+   - Cálculo del gradiente
+   - Actualización de posiciones con momentum
+
+3. **Visualización del proceso:**
+   - Datos originales en $\mathbb{R}^2$
+   - Proyección en $\mathbb{R}^1$ en diferentes iteraciones
+   - Comparación con la implementación de scikit-learn
+
+4. **Observaciones:**
+   - Los clusters se separan gradualmente
+   - El momentum ayuda a evitar mínimos locales
+   - La estructura de vecindad se preserva en la proyección
+
+## Extensiones y Variaciones
+
+El artículo también discute extensiones como:
+
+* **t-SNE para conjuntos de datos grandes:** Se propone una técnica de random walks en grafos de vecindad para manejar grandes volúmenes de datos, donde solo un subconjunto de puntos se visualiza directamente, pero la estructura global influye en el embedding.
+* **t-SNE con costos de incrustación tempranos (early exaggeration):** Multiplicar los $p_{ij}$ por un factor (ej. 4 o 12) en las primeras iteraciones para crear clústeres más compactos y evitar que se formen "mini-clústeres" que no se pueden separar más tarde.
+    $$
+    p'_{ij} = p_{ij} \times \text{exaggeration\_factor}
+    $$
+    para las primeras $T$ iteraciones.
+
+# UMAP: Teoría y Algoritmo
+
+UMAP (Uniform Manifold Approximation and Projection) es una técnica de reducción de dimensionalidad no lineal desarrollada por Leland McInnes, John Healy y James Melville. Su propósito central es **proyectar datos de alta dimensión en un espacio de menor dimensión** (comúnmente 2D o 3D) para **visualización** o como un paso de **preprocesamiento** en pipelines de aprendizaje automático.
+
+A diferencia de técnicas como t-SNE, que se basan en probabilidades de similitud y optimización de la divergencia KL, UMAP se asienta sobre un **marco teórico robusto derivado de la geometría riemanniana y la topología algebraica**. Esta base le confiere propiedades distintivas en términos de **velocidad, escalabilidad y una superior preservación de la estructura global** de los datos.
+
+## Fundamentos Teóricos de UMAP: Una Perspectiva Topológica
+
+La potencia de UMAP radica en su suposición fundamental de que los datos de alta dimensión se encuentran aproximadamente sobre una **variedad (manifold) riemanniana** de baja dimensión. El objetivo principal del algoritmo es **preservar la estructura topológica** de esta variedad subyacente al proyectar los datos a un espacio de menor dimensionalidad. La teoría subyacente se expresa más fácilmente en el lenguaje de la topología y la teoría de categorías.
+
+A un alto nivel, UMAP logra esto utilizando **aproximaciones locales de la variedad**. Estas aproximaciones se "parchean" o unen a través de representaciones de **conjuntos simpliciales difusos** (fuzzy simplicial sets) para construir una representación topológica coherente de los datos en alta dimensión. Posteriormente, se construye una representación topológica similar en el espacio de baja dimensión. El algoritmo optimiza entonces la disposición de los puntos en el espacio de baja dimensión para **minimizar la entropía cruzada entre ambas representaciones topológicas**.
+
+La construcción de estas representaciones topológicas difusas se desglosa en dos problemas:
+1.  **Aproximar la variedad** sobre la que se asume que se encuentran los datos.
+2.  **Construir una representación de conjunto simplicial difuso** de la variedad aproximada.
+
+En última instancia, UMAP se puede entender, desde una perspectiva computacional, como la **construcción y operación sobre grafos ponderados**, situándolo en la clase de algoritmos de aprendizaje basados en **$k$-vecinos** (como Laplacian Eigenmaps, Isomap y t-SNE). Las diferencias entre estos algoritmos residen en los detalles de cómo se construye el grafo y cómo se calcula su disposición en baja dimensión.
+
+### Distribución Uniforme de Datos en una Variedad y Aproximación Geodésica
+
+El primer paso crucial en UMAP es aproximar la variedad subyacente. Se asume que los datos están **distribuidos uniformemente** en esta variedad con respecto a una **métrica riemanniana** $g$ intrínseca a la misma, no necesariamente la métrica euclidiana del espacio ambiente. Aunque los datos reales rara vez se comportan así, UMAP aborda esto de manera ingeniosa: **adapta la métrica localmente** para que los datos *parezcan* uniformemente distribuidos.
+
+Formalmente, para cada punto $x_i$, UMAP normaliza las distancias a sus vecinos con respecto a la distancia a su **$k$-ésimo vecino más cercano**, denotada $\rho_i$. Esto se basa en el **Lema 1** (discutido en el paper), que establece que, bajo ciertas condiciones de un *manifold* Riemanniano $(M,g)$, en una bola $B$ con respecto a $g$ centrada en un punto $p \in M$, la distancia geodésica de $p$ a cualquier $q \in B$ es proporcional a la distancia euclidiana en el espacio ambiente $d_{\mathbb{R}^n}(p,q)$, escalada por el radio de la bola $r$:
+
+$$\frac{1}{r} d_{\mathbb{R}^n}(p,q)$$
+
+La implicación práctica es que, al crear una **distancia personalizada para cada $x_i$** (normalizando por $\rho_i$), se asegura que la suposición de distribución uniforme en la variedad sea válida localmente. El "costo" es que se generan **nociones de distancia locales e independientes** para cada punto, que pueden no ser directamente compatibles entre sí. La tarea siguiente es fusionar estos "espacios métricos discretos" locales en una estructura global consistente.
+
+### Representación de la Variedad con Conjuntos Simpliciales Difusos
+
+La forma en que UMAP unifica estas nociones locales es a través de los **conjuntos simpliciales difusos**.
+
+* Un **simplex** es una generalización de elementos geométricos básicos: un punto es un 0-simplex, una arista es un 1-simplex, un triángulo es un 2-simplex, etc. Un **conjunto simplicial** es una colección de estos simplices que se conectan entre sí para formar una representación discreta de una forma o espacio topológico.
+* El término "**difuso**" (fuzzy) significa que las conexiones entre los simplices no son binarias (existe/no existe), sino que tienen un **grado de membresía o probabilidad** (un valor en el intervalo $[0, 1]$). Esto permite capturar la incertidumbre y la gradualidad en las relaciones de vecindad de los datos, lo que es crucial para manejar la complejidad de la alta dimensionalidad y permite la combinación de las métricas locales inconsistentes en una estructura global.
+
+Computacionalmente, aunque la teoría habla de conjuntos simpliciales difusos completos, en la práctica UMAP trabaja con el **"one skeleton"** de estos conjuntos, lo que se traduce directamente en un **grafo ponderado**. En este grafo:
+* Cada punto de datos $x_i$ es un **nodo**.
+* Cada **arista** entre $x_i$ y $x_j$ tiene un **peso** que representa la "fuerza" o "probabilidad" de conexión entre ellos.
+
+
+## Una Vista Computacional del Algoritmo UMAP
+
+Desde una perspectiva práctica, el algoritmo UMAP se descompone en dos fases principales, características de los algoritmos de reducción de dimensionalidad basados en grafos:
+
+### Fase 1: Construcción del Grafo Ponderado de Alta Dimensión
+
+Esta fase se centra en transformar los datos de alta dimensión en un grafo disperso que capture su estructura topológica local.
+
+1.  **Cálculo de Distancias y Normalización Adaptativa:**
+    * Para cada punto $x_i \in X$, se calculan las distancias euclidianas $d(x_i, x_j)$ a sus $k$-vecinos más cercanos (parámetro `n_neighbors`).
+    * Se determina la distancia $\rho_i$ al $k$-ésimo vecino más cercano de $x_i$.
+    * Se calcula un valor $\sigma_i$ para cada $x_i$ mediante una búsqueda binaria que asegura que la suma de las probabilidades de conexión a sus $k$ vecinos sea $\log_2(k)$. Es decir, se encuentra $\sigma_i$ tal que:
+
+    $$
+    \sum_{j=1}^{k} \exp\left( - \frac{\text{dist}(x_i, x_j) - \rho_i}{\sigma_i} \right) = \log_2(k)
+    $$
+
+2.  **Cálculo de Conectividades Difusas (Probabilidades de Existencia de Aristas):**
+    * La conectividad dirigida (probabilidad de conexión) de $x_i$ a $x_j$ para sus $k$-vecinos se define como:
+
+    $$\mu_{ij} = \exp\left( - \max(0, \frac{\text{dist}(x_i, x_j) - \rho_i}{\sigma_i}) \right)$$
+
+    * El $\max(0, \cdot)$ asegura que los valores $\mu_{ij}$ no excedan 1 (ya que $\text{dist}(x_i, x_j)$ puede ser menor que $\rho_i$).
+
+3.  **Simetrización del Grafo:**
+    * El grafo de conectividades $\mu_{ij}$ es asimétrico. Para obtener un grafo no dirigido que represente la conectividad mutua, UMAP simetriza las aristas utilizando una operación de unión probabilística:
+
+    $$w_{ij} = \mu_{ij} + \mu_{ji} - (\mu_{ij} \cdot \mu_{ji})$$
+
+    * Este $w_{ij} \in [0, 1]$ es el peso final de la arista entre $x_i$ y $x_j$, representando la fuerza mutua de la conexión. Las aristas con $w_{ij} > 0$ forman el **grafo ponderado disperso G** en el espacio de alta dimensión, que es la representación topológica de los datos fuente.
+
+### Fase 2: Cálculo del Diseño (Layout) en Baja Dimensión
+
+Esta fase implica encontrar una representación de baja dimensión de los puntos que preserve la estructura del grafo G.
+
+1.  **Definición de la Conectividad en Baja Dimensión:**
+    * Para el espacio de baja dimensión (embedding) $Y = \{y_1, \ldots, y_N\}$, se define una función de conectividad $q_{ij}$ que representa la similitud entre $y_i$ e $y_j$. Esta función es flexible y se parametriza por los parámetros de usuario `min_dist` y `spread`. Los valores de $a$ y $b$ se derivan de estos parámetros para controlar la forma de la curva. Una forma común es:
+
+    $$q_{ij} = (1 + a\|y_i - y_j\|^{2b})^{-1}$$
+
+    * Esta función permite que las distancias pequeñas en el embedding se mapeen a una mayor variabilidad (lo que ayuda a la separación de clusters) y que las distancias grandes se compriman (preservando la estructura global).
+
+2.  **Inicialización de la Incrustación:**
+    * La incrustación de baja dimensión $\{y_i\}$ puede inicializarse aleatoriamente. Sin embargo, para una **convergencia más rápida y mayor estabilidad**, UMAP prefiere usar un **diseño espectral**. Esto se basa en la propiedad de que el laplaciano simétrico del grafo G es una aproximación discreta del operador de Laplace-Beltrami de la variedad, y sus eigenvectores pueden proporcionar una buena aproximación inicial de la estructura global.
+
+3.  **Optimización del Diseño Mediante Descenso de Gradiente Estocástico:**
+    * El objetivo es minimizar la **entropía cruzada** entre el grafo de alta dimensión $G$ (con pesos $w_{ij}$) y el grafo de baja dimensión $H$ (con pesos $q_{ij}$). La función de costo es:
+
+    $$C = \sum_{i,j \text{ s.t. } i \neq j} \left[ w_{ij} \log \left( \frac{w_{ij}}{q_{ij}} \right) + (1-w_{ij}) \log \left( \frac{1-w_{ij}}{1-q_{ij}} \right) \right]$$
+
+    * La optimización se realiza mediante un proceso iterativo de **descenso de gradiente estocástico**. El gradiente de $C$ induce **fuerzas de atracción y repulsión**:
+        * **Atracción:** Los términos $w_{ij} \log \left( \frac{w_{ij}}{q_{ij}} \right)$ representan la atracción. Si dos puntos son fuertemente conectados en alta dimensión ($w_{ij}$ es alto), pero están lejos en baja dimensión ($q_{ij}$ es bajo), este término impulsa a $y_i$ e $y_j$ a acercarse.
+        * **Repulsión:** Los términos $(1-w_{ij}) \log \left( \frac{1-w_{ij}}{1-q_{ij}} \right)$ representan la repulsión. Si dos puntos no están conectados en alta dimensión ($w_{ij}$ es bajo), pero están demasiado cerca en baja dimensión ($q_{ij}$ es alto), este término impulsa a $y_i$ e $y_j$ a alejarse.
+    * UMAP mejora la eficiencia de la repulsión **muestreando solo un subconjunto de "no-vecinos"** en cada iteración, en lugar de considerar todas las pares de puntos no conectadas. Esto reduce drásticamente la complejidad computacional.
+
+El resultado final de la optimización es un conjunto de coordenadas $\{y_i\}$ en el espacio de baja dimensión que minimiza la discrepancia topológica entre la representación original y la incrustación, proporcionando una visualización que fielmente representa la estructura de los datos.
+
+## Implementación y Análisis de UMAP
+
+Aplicaremos UMAP al mismo dataset, explorando el efecto de sus hiperparámetros clave en la visualización y comparándolo con t-SNE.
+
+```{python}
+#| label: umap-implementation
+#| output: false
+# Implementación personalizada de UMAP (idéntica a la del notebook umap_tsne.ipynb)
+import numpy as np
+from sklearn.decomposition import PCA
+
+def compute_high_dim_probabilities(X, n_neighbors=15, min_dist=0.1):
+    """Calcular probabilidades en alta dimensión usando UMAP"""
+    n_samples = X.shape[0]
+    distances = np.sum((X[:, np.newaxis] - X[np.newaxis, :])**2, axis=2)
+    knn_indices = np.argsort(distances, axis=1)[:, 1:n_neighbors+1]
+    knn_distances = np.array([distances[i, knn_indices[i]] for i in range(n_samples)])
+    sigmas = np.zeros(n_samples)
+    for i in range(n_samples):
+        sigma_min = 0
+        sigma_max = 1000
+        target = np.log2(n_neighbors)
+        for _ in range(50):
+            sigma = (sigma_min + sigma_max) / 2
+            n_neighbors_est = np.sum(np.exp(-knn_distances[i] / sigma))
+            if n_neighbors_est > target:
+                sigma_max = sigma
+            else:
+                sigma_min = sigma
+        sigmas[i] = sigma
+    p_ij = np.zeros((n_samples, n_samples))
+    for i in range(n_samples):
+        p_ij[i, knn_indices[i]] = np.exp(-knn_distances[i] / sigmas[i])
+    p_ij = p_ij + p_ij.T - p_ij * p_ij.T
+    p_ij = p_ij / np.sum(p_ij)
+    return p_ij
+
+def compute_low_dim_probabilities(Y, min_dist=0.1):
+    """Calcular probabilidades en baja dimensión usando UMAP"""
+    n_samples = Y.shape[0]
+    distances = np.sum((Y[:, np.newaxis] - Y[np.newaxis, :])**2, axis=2)
+    a = 1.0
+    b = 1.0
+    q_ij = 1 / (1 + a * distances**b)
+    np.fill_diagonal(q_ij, 0)
+    q_ij = q_ij / np.sum(q_ij)
+    return q_ij
+
+def compute_umap_gradient(p_ij, q_ij, Y):
+    n_samples, n_components = Y.shape
+    gradient = np.zeros_like(Y)
+    Y_diff = Y[:, np.newaxis, :] - Y[np.newaxis, :, :]
+    term1 = p_ij * (1 - q_ij)
+    term2 = (1 - p_ij) * q_ij
+    for d in range(n_components):
+        gradient[:, d] = 2 * np.sum(
+            (term1 - term2)[:, :, np.newaxis] * Y_diff[:, :, d:d+1],
+            axis=1
+        ).flatten()
+    return gradient
+
+def umap_custom(X, n_components=1, n_neighbors=15, min_dist=0.1, 
+                learning_rate=1.0, n_epochs=1000, iterations_to_save=[1, 10, 25, 50, 100, 250, 500, 1000]):
+    n_samples = X.shape[0]
+    max_iter = max(iterations_to_save)
+    pca = PCA(n_components=n_components)
+    Y = pca.fit_transform(X) * 0.1
+    p_ij = compute_high_dim_probabilities(X, n_neighbors, min_dist)
+    momentum = 0.8
+    Y_prev = Y.copy()
+    results = {}
+    for epoch in range(max_iter):
+        current_lr = learning_rate * (1 - epoch/max_iter)
+        q_ij = compute_low_dim_probabilities(Y, min_dist)
+        gradient = compute_umap_gradient(p_ij, q_ij, Y)
+        Y_new = Y - current_lr * gradient + momentum * (Y - Y_prev)
+        Y_prev = Y.copy()
+        Y = Y_new
+        current_iter = epoch + 1
+        if current_iter in iterations_to_save:
+            cross_entropy = -np.sum(p_ij * np.log(q_ij + 1e-12) + 
+                                  (1 - p_ij) * np.log(1 - q_ij + 1e-12))
+            results[current_iter] = {
+                'embedding': Y.copy().flatten(),
+                'cross_entropy': cross_entropy
+            }
+    return results
+
+# Ejecutar UMAP personalizado en 1D
+iterations_to_show = [1, 10, 25, 50, 100, 250, 500, 1000]
+umap_results = umap_custom(X, n_components=1, n_neighbors=15, min_dist=0.1,
+                          learning_rate=1.0, n_epochs=1000, 
+                          iterations_to_save=iterations_to_show)
+
+# Visualización en 1D (idéntica a t-SNE)
+fig, axes = plt.subplots(2, 4, figsize=(25, 12))
+axes = axes.flatten()
+COLORS = ['red', 'blue', 'green']
+CLUSTER_NAMES = ['Cluster 1', 'Cluster 2', 'Cluster 3']
+for idx, n_iter in enumerate(iterations_to_show):
+    ax = axes[idx]
+    Y_1d = umap_results[n_iter]['embedding']
+    cross_entropy = umap_results[n_iter]['cross_entropy']
+    for i, (color, name) in enumerate(zip(COLORS, CLUSTER_NAMES)):
+        mask = labels == i
+        ax.scatter(Y_1d[mask], np.zeros(np.sum(mask)), c=color, label=name if idx == 0 else "",
+                  alpha=0.6, s=50)
+    for i in range(3):
+        cluster_center = np.mean(Y_1d[labels == i])
+        ax.axvline(cluster_center, color=COLORS[i], alpha=0.6, linestyle='--', linewidth=2)
+        ax.text(cluster_center, 0.05, f'C{i+1}', ha='center', va='bottom', 
+                color=COLORS[i], fontweight='bold', fontsize=10)
+    ax.set_title(f'Iteración {n_iter}\nEntropía Cruzada: {cross_entropy:.3f}', 
+                 fontsize=12, fontweight='bold')
+    ax.set_xlabel('Coordenada UMAP (R¹)', fontsize=10)
+    ax.set_ylabel('')
+    ax.set_yticks([])
+    ax.set_ylim(-0.1, 0.1)
+    ax.grid(True, alpha=0.3, axis='x')
+    if idx == 0:
+        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.suptitle('Evolución de UMAP Personalizado', fontsize=14, fontweight='bold', y=1.02)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: umap-convergence
+#| output: asis
+# Gráfico de convergencia (entropía cruzada vs iteraciones)
+plt.figure(figsize=(10, 6))
+iterations = sorted(umap_results.keys())
+cross_entropies = [umap_results[iter]['cross_entropy'] for iter in iterations]
+
+plt.plot(iterations, cross_entropies, 'ro-', linewidth=2, markersize=8)
+plt.xlabel('Número de Iteraciones', fontsize=12)
+plt.ylabel('Entropía Cruzada', fontsize=12)
+plt.title('Convergencia de UMAP', fontsize=14, fontweight='bold')
+plt.grid(True, alpha=0.3)
+plt.yscale('log')
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: umap-cluster-analysis
+#| output: asis
+# Análisis de separación de clusters en DataFrame
+cluster_analysis = []
+
+for n_iter in iterations_to_show:
+    Y_1d = umap_results[n_iter]['embedding']
+    
+    # Calcular centros de clusters
+    centers = []
+    for i in range(3):
+        center = np.mean(Y_1d[labels == i])
+        centers.append(center)
+    
+    # Calcular distancias entre centros
+    distances = []
+    for i in range(3):
+        for j in range(i+1, 3):
+            dist = abs(centers[i] - centers[j])
+            distances.append(dist)
+    
+    avg_separation = np.mean(distances)
+    
+    # Calcular varianza intra-cluster
+    intra_cluster_var = []
+    for i in range(3):
+        cluster_points = Y_1d[labels == i]
+        center = centers[i]
+        squared_distances = (cluster_points - center) ** 2
+        variance = np.mean(squared_distances)
+        intra_cluster_var.append(variance)
+    
+    avg_intra_var = np.mean(intra_cluster_var)
+    separation_ratio = avg_separation / (avg_intra_var + 1e-10)
+    
+    cluster_analysis.append({
+        'Iteración': n_iter,
+        'Separación Promedio': avg_separation,
+        'Varianza Intra-cluster': avg_intra_var,
+        'Ratio de Separación': separation_ratio
+    })
+
+# Crear DataFrame con el análisis
+df_cluster_analysis = pd.DataFrame(cluster_analysis)
+
+# Formatear el DataFrame para mejor visualización
+df_cluster_analysis = df_cluster_analysis.round(3)
+
+# Mostrar el DataFrame con estilo
+styled_df = df_cluster_analysis.style.set_properties(**{
+    'text-align': 'center',
+    'font-size': '12pt',
+    'padding': '5px'
+}).set_table_styles([
+    {'selector': 'th',
+     'props': [('background-color', '#f0f0f0'),
+               ('font-weight', 'bold'),
+               ('text-align', 'center'),
+               ('padding', '5px')]},
+    {'selector': 'td',
+     'props': [('text-align', 'center'),
+               ('padding', '5px')]}
+])
+
+display(styled_df)
+```
+
+
+Este ejemplo muestra:
+
+1. **Generación de datos:**
+   - Tres clusters gaussianos en $\mathbb{R}^2$
+   - Cada cluster tiene 100 puntos
+   - Diferentes medias y varianzas para cada cluster
+
+2. **Implementación paso a paso:**
+   - Cálculo de probabilidades en alta dimensión ($p_{ij}$)
+   - Cálculo de probabilidades en baja dimensión ($q_{ij}$)
+   - Cálculo del gradiente
+   - Actualización de posiciones con momentum
+
+3. **Visualización del proceso:**
+   - Datos originales en $\mathbb{R}^2$
+   - Proyección en $\mathbb{R}^1$ en diferentes iteraciones
+   - Comparación con la implementación de scikit-learn
+
+4. **Observaciones:**
+   - Los clusters se separan gradualmente
+   - El momentum ayuda a evitar mínimos locales
+   - La estructura de vecindad se preserva en la proyección
+
+
+## Ventajas Clave de UMAP
+
+UMAP se compara favorablemente con t-SNE y otros algoritmos de la misma clase (basados en grafos de $k$-vecinos). Su principal ventaja es que sus elecciones algorítmicas, tanto en la construcción del grafo como en el diseño de la incrustación, tienen una **justificación teórica clara** derivada de sus axiomas sobre la variedad y la topología, lo que le permite ser:
+
+* **Más Rápido y Escalable:** Su optimización en grafos dispersos y el muestreo eficiente de no-vecinos lo hacen significativamente más rápido que t-SNE, siendo aplicable a datasets de millones de puntos con una complejidad computacional que se aproxima a $O(N \log N)$.
+* **Mejor Preservación de la Estructura Global:** La naturaleza de su función objetivo y la forma en que maneja las distancias adaptativas le permiten mantener de manera más consistente las relaciones a gran escala entre los clusters, además de la estructura local.
+* **Flexible y Controlable:** Los parámetros `min_dist` y `spread` ofrecen un control intuitivo sobre la densidades y separación de los *clusters* en la visualización final.
+* **Capacidad de Transformación:** UMAP puede aprender una transformación desde el espacio de alta a baja dimensión, lo que permite proyectar nuevos datos en un *embedding* existente sin recalcularlo todo.
+
+
+# Comparativa t-SNE vs UMAP
 
 Ambas t-SNE y UMAP son herramientas poderosas para la reducción de dimensionalidad no lineal y la visualización, buscando revelar la estructura intrínseca de los datos. Sin embargo, sus fundamentos matemáticos y sus enfoques computacionales les otorgan características y rendimientos distintivos.
 
@@ -353,14 +1171,44 @@ Ambas t-SNE y UMAP son herramientas poderosas para la reducción de dimensionali
 
 En resumen, la elección entre t-SNE y UMAP a menudo depende del objetivo específico de la visualización y las características del dataset. Para conjuntos de datos grandes y para una comprensión tanto local como global, UMAP es generalmente preferible. Para un enfoque profundo en la separación de clusters locales en datasets de tamaño moderado, t-SNE sigue siendo una excelente herramienta.
 
-# Implementación y Análisis Comparativo
+# Autoencoders (en veremos)
+
+## Fundamentos Teóricos
+
+Los Autoencoders son una clase de redes neuronales artificiales utilizadas para el aprendizaje no supervisado de representaciones. La arquitectura básica consta de dos partes principales:
+
+1. **Codificador (Encoder):** Una red neuronal que transforma los datos de entrada de alta dimensión en una representación de menor dimensión (código o embedding).
+2. **Decodificador (Decoder):** Una red neuronal que reconstruye los datos originales a partir del código de baja dimensión.
+
+![Esquema de un Autoencoder](img/autoencoder.png)
+
+La idea es que el autoencoder aprenda a reconstruir los datos de entrada a partir de la representación latente. La representación latente es una representación de los datos de entrada que es más fácil de procesar y que captura la información más importante de los datos.Esto es lo que se proyecta en el espacio de baja dimensión.
+
+## Proceso de Aprendizaje
+
+El entrenamiento de un autoencoder sigue estos pasos:
+
+1. **Codificación:** Los datos de entrada $x$ pasan a través del encoder, produciendo una representación latente $z$:
+   $$z = f_\theta(x)$$
+   donde $f_\theta$ es la función del encoder con parámetros $\theta$.
+
+2. **Decodificación:** La representación latente $z$ pasa a través del decoder, produciendo una reconstrucción $\hat{x}$:
+   $$\hat{x} = g_\phi(z)$$
+   donde $g_\phi$ es la función del decoder con parámetros $\phi$.
+
+3. **Optimización:** Los parámetros $\theta$ y $\phi$ se optimizan para minimizar el error de reconstrucción:
+   $$\mathcal{L}(x, \hat{x}) = \|x - \hat{x}\|^2$$
+
+
+
+# Implementación en el dataset MNIST
 
 En esta sección, aplicaremos tanto t-SNE como UMAP al dataset de dígitos de Scikit-learn y analizaremos los resultados, comparando las visualizaciones y las métricas de calidad de las proyecciones.
 
 ## Preparación del Entorno y Carga de Datos
 
 ```{python}
-#| label: setup
+#| label: setup-comparison
 #| output: false
 
 import numpy as np
@@ -495,7 +1343,7 @@ def plot_optimization_process(X, y, n_steps=6):
     n_iter = 1000
     fig, axes = plt.subplots(2, 3, figsize=(20, 10))
     axes = axes.flatten()
-    
+
     iterations_to_plot = np.linspace(250, n_iter, n_steps).astype(int)
     if iterations_to_plot[-1] < 250:
         iterations_to_plot[-1] = 250
@@ -521,7 +1369,9 @@ def plot_optimization_process(X, y, n_steps=6):
 plot_optimization_process(X, y)
 ```
 
+
 ### Análisis de la Convergencia de t-SNE
+
 
 ```{python}
 #| label: convergence-analysis
@@ -573,8 +1423,8 @@ def plot_convergence_metrics(X, y):
     ax2.grid(True)
     
     plt.suptitle('Métricas de Convergencia', y=1.05, fontsize=16)
-    plt.tight_layout()
-    plt.show()
+plt.tight_layout()
+plt.show()
 
 plot_convergence_metrics(X, y)
 ```
@@ -629,179 +1479,197 @@ def plot_hyperparameter_effects(X, y):
 plot_hyperparameter_effects(X, y)
 ```
 
-## Implementación y Análisis de UMAP
 
-Aplicaremos UMAP al mismo dataset, explorando el efecto de sus hiperparámetros clave en la visualización y comparándolo con t-SNE.
+
+
+## Implementación y Análisis de UMAP en MNIST
+
+En esta sección, aplicaremos UMAP al dataset de dígitos MNIST usando scikit-learn y analizaremos su comportamiento y parámetros.
+
+### Proceso de Optimización de UMAP
 
 ```{python}
-#| label: umap-implementation
+#| label: umap-optimization-visualization
 #| output: asis
 
-import umap # Importar la librería UMAP
-import matplotlib.pyplot as plt # Importar matplotlib aquí también
+import numpy as np
+import matplotlib.pyplot as plt
+from umap.umap_ import UMAP
+from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.metrics import silhouette_score
+from scipy.stats import spearmanr
+import warnings
 
-# Asegurar que los datos X y y estén cargados
-try:
-    X
-    y
-except NameError:
-    from sklearn import datasets
-    digits = datasets.load_digits(n_class=10)
-    X = digits.data
-    y = digits.target
+# Configuración de estilo
+plt.style.use('seaborn-v0_8')
+plt.rcParams['figure.figsize'] = [15, 10]
+plt.rcParams['font.size'] = 12
 
-# Aplicar UMAP con parámetros por defecto o iniciales
-umap_reducer = umap.UMAP(n_components=2, 
-                          random_state=42, 
-                          n_neighbors=15, 
-                          min_dist=0.1)
-
-X_umap = umap_reducer.fit_transform(X)
-
-# Visualizar el resultado inicial de UMAP
-def plot_umap_embedding(X_umap, y, title=None):
+def plot_umap_optimization_process(X, y, n_steps=6):
     """
-    Visualiza el embedding UMAP.
+    Visualiza el proceso de optimización de UMAP en diferentes iteraciones.
+    
+    Args:
+        X: Datos de entrada
+        y: Etiquetas
+        n_steps: Número de pasos a visualizar
     """
-    plt.figure(figsize=(12, 10))
-    ax = plt.subplot(111)
+    n_iter = 1000
+    fig, axes = plt.subplots(2, 3, figsize=(20, 10))
+    axes = axes.flatten()
+
+    iterations_to_plot = np.linspace(250, n_iter, n_steps).astype(int)
     
-    scatter = ax.scatter(X_umap[:, 0], X_umap[:, 1], c=y, cmap='tab10', alpha=0.7, s=30)
-    ax.set_title(title if title else 'Visualización UMAP de Dígitos', pad=20, fontsize=14)
-    ax.set_xlabel('Componente UMAP 1')
-    ax.set_ylabel('Componente UMAP 2')
-    ax.grid(True)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        
+        for i, iter in enumerate(iterations_to_plot):
+            umap = UMAP(n_components=2, 
+                       n_neighbors=15,
+                       min_dist=0.1,
+                       n_epochs=int(iter),  # Asegurar que sea entero
+                       random_state=42,
+                       verbose=False)
+            
+            Y = umap.fit_transform(X)
+            
+            ax = axes[i]
+            scatter = ax.scatter(Y[:, 0], Y[:, 1], c=y, cmap='tab10', alpha=0.7, s=30)
+            ax.set_title(f'Iteración {iter}')
+            ax.axis('off')
     
-    # Añadir leyenda de colores
-    legend_elements = [plt.Line2D([0], [0], marker='o', color='w', 
-                                 markerfacecolor=plt.cm.Set1(i/10.), 
-                                 label=str(i), markersize=10)
-                      for i in range(10)]
-    plt.legend(handles=legend_elements, title="Dígitos", 
-              loc='center left', bbox_to_anchor=(1, 0.5))
-    
+    plt.suptitle('Evolución de la Proyección UMAP', y=1.05, fontsize=16)
     plt.tight_layout()
     plt.show()
 
-plot_umap_embedding(X_umap, y, "Visualización UMAP de Dígitos (n_neighbors=15, min_dist=0.1)")
+def plot_umap_convergence_metrics(X, y):
+    """
+    Visualiza las métricas de convergencia de UMAP.
+    
+    Args:
+        X: Datos de entrada
+        y: Etiquetas
+    """
+    n_iter = 1000
+    step_size = 50
+    iterations = range(250, n_iter + 1, step_size)
+    
+    distance_correlations = []
+    silhouette_scores = []
+    
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        
+        for iter in iterations:
+            umap = UMAP(n_components=2, 
+                       n_neighbors=15,
+                       min_dist=0.1,
+                       n_epochs=int(iter),  # Asegurar que sea entero
+                       random_state=42,
+                       verbose=False)
+            
+            Y = umap.fit_transform(X)
+            
+            # Correlación de distancias
+            dist_X = euclidean_distances(X)
+            dist_Y = euclidean_distances(Y)
+            corr, _ = spearmanr(dist_X.flatten(), dist_Y.flatten())
+            distance_correlations.append(corr)
+            
+            # Silhouette score
+            sil_score = silhouette_score(Y, y)
+            silhouette_scores.append(sil_score)
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 6))
+    
+    # Correlación de distancias
+    ax1.plot(iterations, distance_correlations, 'b-', label='Correlación de Distancias', linewidth=2)
+    ax1.set_title('Evolución de la Correlación de Distancias')
+    ax1.set_xlabel('Iteración')
+    ax1.set_ylabel('Correlación de Spearman')
+    ax1.grid(True)
+    
+    # Silhouette score
+    ax2.plot(iterations, silhouette_scores, 'r-', label='Silhouette Score', linewidth=2)
+    ax2.set_title('Evolución del Silhouette Score')
+    ax2.set_xlabel('Iteración')
+    ax2.set_ylabel('Silhouette Score')
+    ax2.grid(True)
+    
+    plt.suptitle('Métricas de Convergencia de UMAP', y=1.05, fontsize=16)
+    plt.tight_layout()
+    plt.show()
+
+def plot_umap_hyperparameter_effects(X, y):
+    """
+    Visualiza el efecto de diferentes hiperparámetros en UMAP.
+    
+    Args:
+        X: Datos de entrada
+        y: Etiquetas
+    """
+    # Efecto del número de vecinos
+    n_neighbors_values = [5, 15, 50]
+    fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+    
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        
+        for i, n_neighbors in enumerate(n_neighbors_values):
+            umap = UMAP(n_components=2, 
+                       n_neighbors=n_neighbors,
+                       min_dist=0.1,
+                       n_epochs=1000,  # Valor fijo para comparación
+                       random_state=42,
+                       verbose=False)
+            Y = umap.fit_transform(X)
+            
+            ax = axes[i]
+            scatter = ax.scatter(Y[:, 0], Y[:, 1], c=y, cmap='tab10', alpha=0.7, s=30)
+            ax.set_title(f'n_neighbors = {n_neighbors}')
+            ax.axis('off')
+    
+    plt.suptitle('Efecto del Número de Vecinos', y=1.05, fontsize=16)
+    plt.tight_layout()
+    plt.show()
+    
+    # Efecto de min_dist
+    min_dist_values = [0.01, 0.1, 0.5]
+    fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+    
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        
+        for i, min_dist in enumerate(min_dist_values):
+            umap = UMAP(n_components=2, 
+                       n_neighbors=15,
+                       min_dist=min_dist,
+                       n_epochs=1000,  # Valor fijo para comparación
+                       random_state=42,
+                       verbose=False)
+            Y = umap.fit_transform(X)
+            
+            ax = axes[i]
+            scatter = ax.scatter(Y[:, 0], Y[:, 1], c=y, cmap='tab10', alpha=0.7, s=30)
+            ax.set_title(f'min_dist = {min_dist}')
+            ax.axis('off')
+    
+    plt.suptitle('Efecto de min_dist', y=1.05, fontsize=16)
+    plt.tight_layout()
+    plt.show()
+
+plot_umap_optimization_process(X, y)
+plot_umap_convergence_metrics(X, y)
 ```
 
 ### Efecto de los Hiperparámetros de UMAP
 
-Para UMAP, dos de los hiperparámetros más influyentes son `n_neighbors` y `min_dist`. `n_neighbors` controla cuántos vecinos considera UMAP al construir el grafo inicial (valores más bajos se enfocan más en la estructura local, valores más altos en la global). `min_dist` controla la distancia mínima permitida entre puntos en el embedding (valores más bajos permiten agrupaciones más densas).
-
 ```{python}
 #| label: umap-hyperparameter-effects
 #| output: asis
-
-# Efecto de n_neighbors
-n_neighbors_values = [5, 15, 50]
-fig, axes = plt.subplots(1, 3, figsize=(20, 6))
-
-for i, n_neighbors in enumerate(n_neighbors_values):
-    umap_reducer = umap.UMAP(n_components=2, 
-                              random_state=42, 
-                              n_neighbors=n_neighbors,
-                              min_dist=0.1) # Mantener min_dist constante
-    X_umap = umap_reducer.fit_transform(X)
-    
-    ax = axes[i]
-    scatter = ax.scatter(X_umap[:, 0], X_umap[:, 1], c=y, cmap='tab10', alpha=0.7, s=30)
-    ax.set_title(f'n_neighbors = {n_neighbors}')
-    ax.axis('off')
-
-plt.suptitle('Efecto de n_neighbors en la Proyección UMAP', y=1.05, fontsize=16)
-plt.tight_layout()
-plt.show()
-
-# Efecto de min_dist
-min_dist_values = [0.0, 0.1, 0.5]
-fig, axes = plt.subplots(1, 3, figsize=(20, 6))
-
-for i, min_dist in enumerate(min_dist_values):
-    umap_reducer = umap.UMAP(n_components=2, 
-                              random_state=42, 
-                              n_neighbors=15, # Mantener n_neighbors constante
-                              min_dist=min_dist)
-    X_umap = umap_reducer.fit_transform(X)
-    
-    ax = axes[i]
-    scatter = ax.scatter(X_umap[:, 0], X_umap[:, 1], c=y, cmap='tab10', alpha=0.7, s=30)
-    ax.set_title(f'min_dist = {min_dist}')
-    ax.axis('off')
-
-plt.suptitle('Efecto de min_dist en la Proyección UMAP', y=1.05, fontsize=16)
-plt.tight_layout()
-plt.show()
+plot_umap_hyperparameter_effects(X, y)
 ```
-
-## Análisis Comparativo de las Proyecciones Finales
-
-Finalmente, compararemos las proyecciones finales obtenidas con t-SNE y UMAP utilizando métricas cuantitativas y visualizaciones lado a lado.
-
-```{python}
-#| label: distance-analysis
-#| output: asis
-
-# Cargar datos si no están definidos (para asegurar X y y)
-try:
-    X
-    y
-except NameError:
-    from sklearn import datasets
-    digits = datasets.load_digits(n_class=10)
-    X = digits.data
-    y = digits.target
-
-# Calcular la proyección t-SNE final dentro de este bloque
-tsne_final = TSNE(n_components=2, 
-                  init='random', 
-                  random_state=42, 
-                  perplexity=30, 
-                  learning_rate=200.0, 
-                  n_iter=1000)
-
-X_tsne = tsne_final.fit_transform(X) # Calcular X_tsne
-
-# Calcular la matriz de distancias
-# from sklearn.metrics.pairwise import euclidean_distances # Ya importado en setup
-distances_original = euclidean_distances(X)
-distances_tsne = euclidean_distances(X_tsne)
-
-# Calcular Correlación de Spearman y p-valor
-# from scipy.stats import spearmanr # Ya importado en setup
-correlation, p_value = spearmanr(distances_original.flatten(), distances_tsne.flatten())
-
-print("Correlación de Spearman entre distancias originales y t-SNE:")
-print(f"Coeficiente de correlación: {correlation:.4f}")
-print(f"P-valor asociado: {p_value:.4f}")
-
-# Visualizar la distribución de distancias
-plt.figure(figsize=(10, 6))
-plt.hist(distances_original.flatten(), bins=50, alpha=0.5, label='Original', density=True)
-plt.hist(distances_tsne.flatten(), bins=50, alpha=0.5, label='t-SNE', density=True)
-plt.title('Distribución de Distancias Euclidianas')
-plt.xlabel('Distancia')
-plt.ylabel('Densidad Estimada')
-plt.legend()
-plt.grid(True)
-plt.show()
-```
-
-# Conclusiones
-
-El análisis t-SNE nos permite visualizar efectivamente la estructura de los datos de dígitos en un espacio de 2 dimensiones. Observamos que:
-
-1. Los dígitos similares tienden a agruparse juntos en el espacio reducido
-2. La técnica preserva las relaciones de vecindad importantes
-3. La visualización resultante permite identificar patrones y clusters naturales en los datos
-
-El coeficiente de correlación de Spearman entre las distancias originales y las distancias en el espacio t-SNE, junto con su p-valor, proporciona una medida cuantitativa de qué tan bien se preservan las relaciones de similitud, apoyando las observaciones visuales de los clusters.
 
 # Referencias
 
-1. van der Maaten, L., & Hinton, G. (2008). Visualizing Data using t-SNE. Journal of Machine Learning Research, 9, 2579-2605.
-2. scikit-learn: Machine Learning in Python, Pedregosa et al., JMLR 12, pp. 2825-2830, 2011.
-3. https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.spearmanr.html
-4. https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise.euclidean_distances.html
-5. https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_score.html
+A completar
