@@ -40,7 +40,7 @@ UMAP_PARAMS = {
     'random_state': 42
 }
 
-OUTPUT_DIR = 'precomputed_embeddings'
+OUTPUT_DIR = './src/precomputed_embeddings'
 
 # Funciones de caché y carga de datos
 @st.cache_data

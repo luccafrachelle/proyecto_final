@@ -1,0 +1,1202 @@
+[
+    {
+        "type": "tsne",
+        "perplexity": 5,
+        "learning_rate": 50.0,
+        "filename": "tsne_p5_lr50.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 5,
+        "learning_rate": 100.0,
+        "filename": "tsne_p5_lr100.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 5,
+        "learning_rate": 150.0,
+        "filename": "tsne_p5_lr150.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 5,
+        "learning_rate": 200.0,
+        "filename": "tsne_p5_lr200.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 5,
+        "learning_rate": 250.0,
+        "filename": "tsne_p5_lr250.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 5,
+        "learning_rate": 300.0,
+        "filename": "tsne_p5_lr300.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 5,
+        "learning_rate": 400.0,
+        "filename": "tsne_p5_lr400.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 5,
+        "learning_rate": 500.0,
+        "filename": "tsne_p5_lr500.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 5,
+        "learning_rate": 750.0,
+        "filename": "tsne_p5_lr750.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 5,
+        "learning_rate": 1000.0,
+        "filename": "tsne_p5_lr1000.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 7,
+        "learning_rate": 50.0,
+        "filename": "tsne_p7_lr50.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 7,
+        "learning_rate": 100.0,
+        "filename": "tsne_p7_lr100.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 7,
+        "learning_rate": 150.0,
+        "filename": "tsne_p7_lr150.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 7,
+        "learning_rate": 200.0,
+        "filename": "tsne_p7_lr200.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 7,
+        "learning_rate": 250.0,
+        "filename": "tsne_p7_lr250.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 7,
+        "learning_rate": 300.0,
+        "filename": "tsne_p7_lr300.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 7,
+        "learning_rate": 400.0,
+        "filename": "tsne_p7_lr400.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 7,
+        "learning_rate": 500.0,
+        "filename": "tsne_p7_lr500.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 7,
+        "learning_rate": 750.0,
+        "filename": "tsne_p7_lr750.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 7,
+        "learning_rate": 1000.0,
+        "filename": "tsne_p7_lr1000.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 9,
+        "learning_rate": 50.0,
+        "filename": "tsne_p9_lr50.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 9,
+        "learning_rate": 100.0,
+        "filename": "tsne_p9_lr100.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 9,
+        "learning_rate": 150.0,
+        "filename": "tsne_p9_lr150.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 9,
+        "learning_rate": 200.0,
+        "filename": "tsne_p9_lr200.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 9,
+        "learning_rate": 250.0,
+        "filename": "tsne_p9_lr250.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 9,
+        "learning_rate": 300.0,
+        "filename": "tsne_p9_lr300.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 9,
+        "learning_rate": 400.0,
+        "filename": "tsne_p9_lr400.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 9,
+        "learning_rate": 500.0,
+        "filename": "tsne_p9_lr500.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 9,
+        "learning_rate": 750.0,
+        "filename": "tsne_p9_lr750.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 9,
+        "learning_rate": 1000.0,
+        "filename": "tsne_p9_lr1000.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 11,
+        "learning_rate": 50.0,
+        "filename": "tsne_p11_lr50.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 11,
+        "learning_rate": 100.0,
+        "filename": "tsne_p11_lr100.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 11,
+        "learning_rate": 150.0,
+        "filename": "tsne_p11_lr150.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 11,
+        "learning_rate": 200.0,
+        "filename": "tsne_p11_lr200.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 11,
+        "learning_rate": 250.0,
+        "filename": "tsne_p11_lr250.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 11,
+        "learning_rate": 300.0,
+        "filename": "tsne_p11_lr300.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 11,
+        "learning_rate": 400.0,
+        "filename": "tsne_p11_lr400.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 11,
+        "learning_rate": 500.0,
+        "filename": "tsne_p11_lr500.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 11,
+        "learning_rate": 750.0,
+        "filename": "tsne_p11_lr750.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 11,
+        "learning_rate": 1000.0,
+        "filename": "tsne_p11_lr1000.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 13,
+        "learning_rate": 50.0,
+        "filename": "tsne_p13_lr50.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 13,
+        "learning_rate": 100.0,
+        "filename": "tsne_p13_lr100.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 13,
+        "learning_rate": 150.0,
+        "filename": "tsne_p13_lr150.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 13,
+        "learning_rate": 200.0,
+        "filename": "tsne_p13_lr200.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 13,
+        "learning_rate": 250.0,
+        "filename": "tsne_p13_lr250.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 13,
+        "learning_rate": 300.0,
+        "filename": "tsne_p13_lr300.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 13,
+        "learning_rate": 400.0,
+        "filename": "tsne_p13_lr400.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 13,
+        "learning_rate": 500.0,
+        "filename": "tsne_p13_lr500.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 13,
+        "learning_rate": 750.0,
+        "filename": "tsne_p13_lr750.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 13,
+        "learning_rate": 1000.0,
+        "filename": "tsne_p13_lr1000.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 15,
+        "learning_rate": 50.0,
+        "filename": "tsne_p15_lr50.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 15,
+        "learning_rate": 100.0,
+        "filename": "tsne_p15_lr100.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 15,
+        "learning_rate": 150.0,
+        "filename": "tsne_p15_lr150.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 15,
+        "learning_rate": 200.0,
+        "filename": "tsne_p15_lr200.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 15,
+        "learning_rate": 250.0,
+        "filename": "tsne_p15_lr250.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 15,
+        "learning_rate": 300.0,
+        "filename": "tsne_p15_lr300.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 15,
+        "learning_rate": 400.0,
+        "filename": "tsne_p15_lr400.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 15,
+        "learning_rate": 500.0,
+        "filename": "tsne_p15_lr500.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 15,
+        "learning_rate": 750.0,
+        "filename": "tsne_p15_lr750.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 15,
+        "learning_rate": 1000.0,
+        "filename": "tsne_p15_lr1000.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 17,
+        "learning_rate": 50.0,
+        "filename": "tsne_p17_lr50.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 17,
+        "learning_rate": 100.0,
+        "filename": "tsne_p17_lr100.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 17,
+        "learning_rate": 150.0,
+        "filename": "tsne_p17_lr150.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 17,
+        "learning_rate": 200.0,
+        "filename": "tsne_p17_lr200.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 17,
+        "learning_rate": 250.0,
+        "filename": "tsne_p17_lr250.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 17,
+        "learning_rate": 300.0,
+        "filename": "tsne_p17_lr300.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 17,
+        "learning_rate": 400.0,
+        "filename": "tsne_p17_lr400.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 17,
+        "learning_rate": 500.0,
+        "filename": "tsne_p17_lr500.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 17,
+        "learning_rate": 750.0,
+        "filename": "tsne_p17_lr750.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 17,
+        "learning_rate": 1000.0,
+        "filename": "tsne_p17_lr1000.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 19,
+        "learning_rate": 50.0,
+        "filename": "tsne_p19_lr50.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 19,
+        "learning_rate": 100.0,
+        "filename": "tsne_p19_lr100.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 19,
+        "learning_rate": 150.0,
+        "filename": "tsne_p19_lr150.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 19,
+        "learning_rate": 200.0,
+        "filename": "tsne_p19_lr200.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 19,
+        "learning_rate": 250.0,
+        "filename": "tsne_p19_lr250.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 19,
+        "learning_rate": 300.0,
+        "filename": "tsne_p19_lr300.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 19,
+        "learning_rate": 400.0,
+        "filename": "tsne_p19_lr400.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 19,
+        "learning_rate": 500.0,
+        "filename": "tsne_p19_lr500.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 19,
+        "learning_rate": 750.0,
+        "filename": "tsne_p19_lr750.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 19,
+        "learning_rate": 1000.0,
+        "filename": "tsne_p19_lr1000.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 21,
+        "learning_rate": 50.0,
+        "filename": "tsne_p21_lr50.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 21,
+        "learning_rate": 100.0,
+        "filename": "tsne_p21_lr100.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 21,
+        "learning_rate": 150.0,
+        "filename": "tsne_p21_lr150.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 21,
+        "learning_rate": 200.0,
+        "filename": "tsne_p21_lr200.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 21,
+        "learning_rate": 250.0,
+        "filename": "tsne_p21_lr250.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 21,
+        "learning_rate": 300.0,
+        "filename": "tsne_p21_lr300.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 21,
+        "learning_rate": 400.0,
+        "filename": "tsne_p21_lr400.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 21,
+        "learning_rate": 500.0,
+        "filename": "tsne_p21_lr500.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 21,
+        "learning_rate": 750.0,
+        "filename": "tsne_p21_lr750.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 21,
+        "learning_rate": 1000.0,
+        "filename": "tsne_p21_lr1000.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 23,
+        "learning_rate": 50.0,
+        "filename": "tsne_p23_lr50.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 23,
+        "learning_rate": 100.0,
+        "filename": "tsne_p23_lr100.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 23,
+        "learning_rate": 150.0,
+        "filename": "tsne_p23_lr150.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 23,
+        "learning_rate": 200.0,
+        "filename": "tsne_p23_lr200.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 23,
+        "learning_rate": 250.0,
+        "filename": "tsne_p23_lr250.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 23,
+        "learning_rate": 300.0,
+        "filename": "tsne_p23_lr300.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 23,
+        "learning_rate": 400.0,
+        "filename": "tsne_p23_lr400.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 23,
+        "learning_rate": 500.0,
+        "filename": "tsne_p23_lr500.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 23,
+        "learning_rate": 750.0,
+        "filename": "tsne_p23_lr750.npy"
+    },
+    {
+        "type": "tsne",
+        "perplexity": 23,
+        "learning_rate": 1000.0,
+        "filename": "tsne_p23_lr1000.npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 5,
+        "min_dist": 0.001,
+        "filename": "umap_nn5_md0_001_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 5,
+        "min_dist": 0.003,
+        "filename": "umap_nn5_md0_003_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 5,
+        "min_dist": 0.005,
+        "filename": "umap_nn5_md0_005_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 5,
+        "min_dist": 0.007,
+        "filename": "umap_nn5_md0_007_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 5,
+        "min_dist": 0.009,
+        "filename": "umap_nn5_md0_009_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 5,
+        "min_dist": 0.011,
+        "filename": "umap_nn5_md0_011_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 5,
+        "min_dist": 0.013,
+        "filename": "umap_nn5_md0_013_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 5,
+        "min_dist": 0.015,
+        "filename": "umap_nn5_md0_015_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 5,
+        "min_dist": 0.017,
+        "filename": "umap_nn5_md0_017_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 5,
+        "min_dist": 0.019,
+        "filename": "umap_nn5_md0_019_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 7,
+        "min_dist": 0.001,
+        "filename": "umap_nn7_md0_001_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 7,
+        "min_dist": 0.003,
+        "filename": "umap_nn7_md0_003_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 7,
+        "min_dist": 0.005,
+        "filename": "umap_nn7_md0_005_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 7,
+        "min_dist": 0.007,
+        "filename": "umap_nn7_md0_007_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 7,
+        "min_dist": 0.009,
+        "filename": "umap_nn7_md0_009_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 7,
+        "min_dist": 0.011,
+        "filename": "umap_nn7_md0_011_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 7,
+        "min_dist": 0.013,
+        "filename": "umap_nn7_md0_013_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 7,
+        "min_dist": 0.015,
+        "filename": "umap_nn7_md0_015_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 7,
+        "min_dist": 0.017,
+        "filename": "umap_nn7_md0_017_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 7,
+        "min_dist": 0.019,
+        "filename": "umap_nn7_md0_019_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 9,
+        "min_dist": 0.001,
+        "filename": "umap_nn9_md0_001_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 9,
+        "min_dist": 0.003,
+        "filename": "umap_nn9_md0_003_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 9,
+        "min_dist": 0.005,
+        "filename": "umap_nn9_md0_005_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 9,
+        "min_dist": 0.007,
+        "filename": "umap_nn9_md0_007_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 9,
+        "min_dist": 0.009,
+        "filename": "umap_nn9_md0_009_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 9,
+        "min_dist": 0.011,
+        "filename": "umap_nn9_md0_011_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 9,
+        "min_dist": 0.013,
+        "filename": "umap_nn9_md0_013_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 9,
+        "min_dist": 0.015,
+        "filename": "umap_nn9_md0_015_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 9,
+        "min_dist": 0.017,
+        "filename": "umap_nn9_md0_017_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 9,
+        "min_dist": 0.019,
+        "filename": "umap_nn9_md0_019_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 11,
+        "min_dist": 0.001,
+        "filename": "umap_nn11_md0_001_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 11,
+        "min_dist": 0.003,
+        "filename": "umap_nn11_md0_003_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 11,
+        "min_dist": 0.005,
+        "filename": "umap_nn11_md0_005_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 11,
+        "min_dist": 0.007,
+        "filename": "umap_nn11_md0_007_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 11,
+        "min_dist": 0.009,
+        "filename": "umap_nn11_md0_009_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 11,
+        "min_dist": 0.011,
+        "filename": "umap_nn11_md0_011_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 11,
+        "min_dist": 0.013,
+        "filename": "umap_nn11_md0_013_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 11,
+        "min_dist": 0.015,
+        "filename": "umap_nn11_md0_015_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 11,
+        "min_dist": 0.017,
+        "filename": "umap_nn11_md0_017_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 11,
+        "min_dist": 0.019,
+        "filename": "umap_nn11_md0_019_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 13,
+        "min_dist": 0.001,
+        "filename": "umap_nn13_md0_001_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 13,
+        "min_dist": 0.003,
+        "filename": "umap_nn13_md0_003_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 13,
+        "min_dist": 0.005,
+        "filename": "umap_nn13_md0_005_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 13,
+        "min_dist": 0.007,
+        "filename": "umap_nn13_md0_007_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 13,
+        "min_dist": 0.009,
+        "filename": "umap_nn13_md0_009_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 13,
+        "min_dist": 0.011,
+        "filename": "umap_nn13_md0_011_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 13,
+        "min_dist": 0.013,
+        "filename": "umap_nn13_md0_013_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 13,
+        "min_dist": 0.015,
+        "filename": "umap_nn13_md0_015_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 13,
+        "min_dist": 0.017,
+        "filename": "umap_nn13_md0_017_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 13,
+        "min_dist": 0.019,
+        "filename": "umap_nn13_md0_019_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 15,
+        "min_dist": 0.001,
+        "filename": "umap_nn15_md0_001_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 15,
+        "min_dist": 0.003,
+        "filename": "umap_nn15_md0_003_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 15,
+        "min_dist": 0.005,
+        "filename": "umap_nn15_md0_005_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 15,
+        "min_dist": 0.007,
+        "filename": "umap_nn15_md0_007_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 15,
+        "min_dist": 0.009,
+        "filename": "umap_nn15_md0_009_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 15,
+        "min_dist": 0.011,
+        "filename": "umap_nn15_md0_011_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 15,
+        "min_dist": 0.013,
+        "filename": "umap_nn15_md0_013_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 15,
+        "min_dist": 0.015,
+        "filename": "umap_nn15_md0_015_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 15,
+        "min_dist": 0.017,
+        "filename": "umap_nn15_md0_017_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 15,
+        "min_dist": 0.019,
+        "filename": "umap_nn15_md0_019_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 17,
+        "min_dist": 0.001,
+        "filename": "umap_nn17_md0_001_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 17,
+        "min_dist": 0.003,
+        "filename": "umap_nn17_md0_003_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 17,
+        "min_dist": 0.005,
+        "filename": "umap_nn17_md0_005_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 17,
+        "min_dist": 0.007,
+        "filename": "umap_nn17_md0_007_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 17,
+        "min_dist": 0.009,
+        "filename": "umap_nn17_md0_009_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 17,
+        "min_dist": 0.011,
+        "filename": "umap_nn17_md0_011_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 17,
+        "min_dist": 0.013,
+        "filename": "umap_nn17_md0_013_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 17,
+        "min_dist": 0.015,
+        "filename": "umap_nn17_md0_015_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 17,
+        "min_dist": 0.017,
+        "filename": "umap_nn17_md0_017_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 17,
+        "min_dist": 0.019,
+        "filename": "umap_nn17_md0_019_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 19,
+        "min_dist": 0.001,
+        "filename": "umap_nn19_md0_001_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 19,
+        "min_dist": 0.003,
+        "filename": "umap_nn19_md0_003_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 19,
+        "min_dist": 0.005,
+        "filename": "umap_nn19_md0_005_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 19,
+        "min_dist": 0.007,
+        "filename": "umap_nn19_md0_007_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 19,
+        "min_dist": 0.009,
+        "filename": "umap_nn19_md0_009_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 19,
+        "min_dist": 0.011,
+        "filename": "umap_nn19_md0_011_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 19,
+        "min_dist": 0.013,
+        "filename": "umap_nn19_md0_013_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 19,
+        "min_dist": 0.015,
+        "filename": "umap_nn19_md0_015_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 19,
+        "min_dist": 0.017,
+        "filename": "umap_nn19_md0_017_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 19,
+        "min_dist": 0.019,
+        "filename": "umap_nn19_md0_019_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 21,
+        "min_dist": 0.001,
+        "filename": "umap_nn21_md0_001_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 21,
+        "min_dist": 0.003,
+        "filename": "umap_nn21_md0_003_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 21,
+        "min_dist": 0.005,
+        "filename": "umap_nn21_md0_005_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 21,
+        "min_dist": 0.007,
+        "filename": "umap_nn21_md0_007_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 21,
+        "min_dist": 0.009,
+        "filename": "umap_nn21_md0_009_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 21,
+        "min_dist": 0.011,
+        "filename": "umap_nn21_md0_011_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 21,
+        "min_dist": 0.013,
+        "filename": "umap_nn21_md0_013_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 21,
+        "min_dist": 0.015,
+        "filename": "umap_nn21_md0_015_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 21,
+        "min_dist": 0.017,
+        "filename": "umap_nn21_md0_017_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 21,
+        "min_dist": 0.019,
+        "filename": "umap_nn21_md0_019_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 23,
+        "min_dist": 0.001,
+        "filename": "umap_nn23_md0_001_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 23,
+        "min_dist": 0.003,
+        "filename": "umap_nn23_md0_003_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 23,
+        "min_dist": 0.005,
+        "filename": "umap_nn23_md0_005_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 23,
+        "min_dist": 0.007,
+        "filename": "umap_nn23_md0_007_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 23,
+        "min_dist": 0.009,
+        "filename": "umap_nn23_md0_009_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 23,
+        "min_dist": 0.011,
+        "filename": "umap_nn23_md0_011_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 23,
+        "min_dist": 0.013,
+        "filename": "umap_nn23_md0_013_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 23,
+        "min_dist": 0.015,
+        "filename": "umap_nn23_md0_015_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 23,
+        "min_dist": 0.017,
+        "filename": "umap_nn23_md0_017_npy"
+    },
+    {
+        "type": "umap",
+        "n_neighbors": 23,
+        "min_dist": 0.019,
+        "filename": "umap_nn23_md0_019_npy"
+    }
+]
