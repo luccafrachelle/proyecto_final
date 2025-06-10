@@ -1,7 +1,7 @@
 ---
 title: "Análisis y Visualización de Datos de Alta Dimensionalidad con t-SNE y UMAP"
 author: "Lucca Frachelle , Cecilia Waksman"
-date: "2025-06-02"
+date: today
 warning: false
 message: false
 echo: false
@@ -105,35 +105,6 @@ donde:
 
 -   $K$ es el número de elementos en el vector de entrada.
 
-¿Cómo funciona?
-
-1.  **Exponenciación:** Primero, se aplica la función exponencial a cada elemento de entrada ($e^{z_i}$). Esto convierte todos los números en positivos y, además, magnifica las diferencias entre ellos.
-2.  **Normalización:** A continuación, se divide cada valor exponencial por la suma de todos los valores exponenciales. Este paso asegura que los valores resultantes estén en el rango de 0 a 1 y que su suma total sea 1.
-
-**Ejemplo Numérico:**
-
-Supongamos que un modelo de clasificación de imágenes arroja los siguientes *logits* para las clases "gato", "perro" y "pájaro":
-
-$z = [z_{\text{gato}}, z_{\text{perro}}, z_{\text{pájaro}}] = [2.0, 1.0, 0.1]$
-
-**Paso 1: Exponenciación**
-
--   $e^{z_{\text{gato}}} = e^{2.0} \approx 7.389$
--   $e^{z_{\text{perro}}} = e^{1.0} \approx 2.718$
--   $e^{z_{\text{pájaro}}} = e^{0.1} \approx 1.105$
-
-**Paso 2: Suma de los exponenciales (Denominador)**
-
--   $\sum_{j=1}^{3} e^{z_j} = 7.389 + 2.718 + 1.105 = 11.212$
-
-**Paso 3: Normalización (Cálculo de Softmax para cada clase)**
-
--   $\text{Softmax}(z_{\text{gato}}) = \frac{7.389}{11.212} \approx 0.659$
--   $\text{Softmax}(z_{\text{perro}}) = \frac{2.718}{11.212} \approx 0.242$
--   $\text{Softmax}(z_{\text{pájaro}}) = \frac{1.105}{11.212} \approx 0.099$
-
-El vector de probabilidades resultante es aproximadamente $[0.659, 0.242, 0.099]$.
-
 En el contexto de t-SNE, la función softmax se utiliza para convertir las distancias euclidianas en probabilidades de similitud entre puntos.
 
 ## Divergencia de Kullback-Leibler (KL)
@@ -161,43 +132,7 @@ La divergencia KL puede interpretarse como la esperanza del logaritmo del cocien
 -   **Si $P(i)$ es pequeña y $Q(i)$ es grande:** El cociente será pequeño, y su logaritmo será un número negativo. Sin embargo, al estar ponderado por un $P(i)$ pequeño, la contribución total al costo será también pequeña.
 -   **Si $P(i) \neq 0$ y $Q(i) = 0$:** La divergencia se vuelve infinita. Esta es una propiedad crucial en t-SNE, ya que impone una penalización infinita si la representación de baja dimensión asigna una probabilidad cero a una relación que era posible en el espacio original.
 
-**Ejemplo Numérico: La No Simetría de KL**
-
-Consideremos dos distribuciones de probabilidad $P$ y $Q$ para un dado de 6 caras:
-
-**Distribución** $P$ (Dado Justo): $P = [P(1), P(2), P(3), P(4), P(5), P(6)]$ $P = [\frac{1}{6}, \frac{1}{6}, \frac{1}{6}, \frac{1}{6}, \frac{1}{6}, \frac{1}{6}] \approx [0.167, 0.167, 0.167, 0.167, 0.167, 0.167]$
-
-**Distribución** $Q$ (Dado Cargado, favorece el 6): $Q = [Q(1), Q(2), Q(3), Q(4), Q(5), Q(6)]$ $Q = [0.1, 0.1, 0.1, 0.1, 0.1, 0.5]$
-
-**Cálculo de** $\text{KL}(P || Q)$ (Cuánto difiere $Q$ de $P$):
-
-$$\text{KL}(P || Q) = \sum_{i=1}^{6} P(i) \log \left( \frac{P(i)}{Q(i)} \right)$$
-
--   Para $i=1, \dots, 5$: $P(i) = \frac{1}{6}$, $Q(i) = 0.1$
-    -   $\frac{P(i)}{Q(i)} = \frac{0.167}{0.1} = \frac{0.167}{0.1} \approx 1.67$
-    -   $P(i) \log \left( \frac{P(i)}{Q(i)} \right) \approx 0.167 \times \log(1.67) \approx 0.167 \times 0.513 \approx 0.0857$ (para cada uno de los 5 casos)
--   Para $i=6$: $P(6) = \frac{1}{6}$, $Q(6) = 0.5$
-    -   $\frac{P(6)}{Q(6)} = \frac{1/6}{0.5} = \frac{0.167}{0.5} \approx 0.334$
-    -   $P(6) \log \left( \frac{P(6)}{Q(6)} \right) \approx 0.167 \times \log(0.334) \approx 0.167 \times (-1.096) \approx -0.183$
-
-Sumando todo: $\text{KL}(P || Q) \approx (5 \times 0.0857) + (-0.183) = 0.4285 - 0.183 = 0.2455$
-
-**Cálculo de** $\text{KL}(Q || P)$ (Cuánto difiere $P$ de $Q$):
-
-$$\text{KL}(Q || P) = \sum_{i=1}^{6} Q(i) \log \left( \frac{Q(i)}{P(i)} \right)$$
-
--   Para $i=1, \dots, 5$: $Q(i) = 0.1$, $P(i) = \frac{1}{6}$
-    -   $\frac{Q(i)}{P(i)} = \frac{0.1}{1/6} = \frac{0.1}{0.167} \approx 0.6$
-    -   $Q(i) \log \left( \frac{Q(i)}{P(i)} \right) \approx 0.1 \times \log(0.6) \approx 0.1 \times (-0.511) \approx -0.0511$ (para cada uno de los 5 casos)
--   Para $i=6$: $Q(6) = 0.5$, $P(6) = \frac{1}{6}$
-    -   $\frac{Q(6)}{P(6)} = \frac{0.5}{1/6} = \frac{0.5}{0.167} \approx 2.99$
-    -   $Q(6) \log \left( \frac{Q(6)}{P(6)} \right) \approx 0.5 \times \log(2.99) \approx 0.5 \times 1.095 \approx 0.5475$
-
-Sumando todo: $\text{KL}(Q || P) \approx (5 \times -0.0511) + 0.5475 = -0.2555 + 0.5475 = 0.292$
-
-**Conclusión sobre la No-Simetría:**
-
-Como se observa, $\text{KL}(P || Q) \approx 0.2455$ y $\text{KL}(Q || P) \approx 0.292$, demostrando que la divergencia KL no es simétrica. El costo de modelar $P$ con $Q$ no es el mismo que el de modelar $Q$ con $P$.
+Observar que KL no es simétrica, es decir, $KL(P || Q) \neq KL(Q || P)$.
 
 ## Fundamentos Topológicos de UMAP
 
@@ -560,17 +495,28 @@ tsne_results = tsne_custom(X, n_components=1, iterations_to_save=iterations_to_s
                           learning_rate=200, perplexity=15)
 ```
 
-==
+
 
 ```{python}
 #| label: tsne-visualization
 #| output: asis
-# Visualizar últimas 4 iteraciones
-fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+# Visualizar las iteraciones especificadas
+fig, axes = plt.subplots(3, 2, figsize=(18, 18)) # Changed to 3 rows, 2 columns for 6 plots
 axes = axes.flatten()
 
-for idx, n_iter in enumerate(iterations_to_show[4:]):
+# Define the specific iterations you want to visualize
+iterations_to_show_custom = [1, 25, 50, 100, 500, 1000]
+
+for idx, n_iter in enumerate(iterations_to_show_custom):
     ax = axes[idx]
+    
+    # Check if the iteration exists in tsne_results to prevent errors
+    if n_iter not in tsne_results:
+        print(f"Warning: Iteration {n_iter} not found in tsne_results. Skipping.")
+        ax.set_title(f'Iteración {n_iter} (No disponible)')
+        ax.set_visible(False) # Hide the subplot if data isn't available
+        continue
+
     Y_1d = tsne_results[n_iter]['embedding']
     kl_div = tsne_results[n_iter]['kl_divergence']
     
@@ -595,7 +541,7 @@ for idx, n_iter in enumerate(iterations_to_show[4:]):
     if idx == 0:
         ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 
-plt.suptitle('Evolución de t-SNE Personalizado (Iteraciones 100-1000)', fontsize=14, fontweight='bold', y=1.02)
+plt.suptitle('Evolución de t-SNE Personalizado (Iteraciones Clave)', fontsize=16, fontweight='bold', y=1.03) 
 plt.tight_layout()
 plt.show()
 ```
@@ -711,9 +657,9 @@ Este ejemplo muestra:
 El artículo también discute extensiones como:
 
 -   **t-SNE para conjuntos de datos grandes:** Se propone una técnica de random walks en grafos de vecindad para manejar grandes volúmenes de datos, donde solo un subconjunto de puntos se visualiza directamente, pero la estructura global influye en el embedding.
--   **t-SNE con costos de incrustación tempranos (early exaggeration):** Multiplicar los $p_{ij}$ por un factor (ej. 4 o 12) en las primeras iteraciones para crear clústeres más compactos y evitar que se formen "mini-clústeres" que no se pueden separar más tarde. $$
-      p'_{ij} = p_{ij} \times \text{exaggeration\_factor}
-      $$ para las primeras $T$ iteraciones.
+-   **t-SNE con costos de incrustación tempranos (early exaggeration):** Multiplicar los $p_{ij}$ por un factor (ej. 4 o 12) en las primeras iteraciones para crear clústeres más compactos y evitar que se formen "mini-clústeres" que no se pueden separar más tarde. 
+      $$p'_{ij} = p_{ij} \times \text{exaggeration\_factor}$$
+      para las primeras $T$ iteraciones.
 
 # UMAP: Teoría y Algoritmo
 
@@ -947,7 +893,7 @@ Estos parámetros permiten al usuario ajustar el equilibrio entre la preservaci�
 ```{python}
 #| label: umap-implementation
 #| output: false
-# Implementación personalizada de UMAP (idéntica a la del notebook umap_tsne.ipynb)
+
 import numpy as np
 from sklearn.decomposition import PCA
 
@@ -1162,197 +1108,13 @@ def plot_umap_hyperparameter_effects(X, y):
     plt.tight_layout()
     plt.show()
 
-# Ejecutar UMAP personalizado en 1D
 iterations_to_show = [1, 10, 25, 50, 100, 250, 500, 1000]
 umap_results = umap_custom(X, n_components=1, n_neighbors=15, min_dist=0.1,
                           learning_rate=1.0, n_epochs=1000, 
                           iterations_to_save=iterations_to_show)
 ```
 
-```{python}
-#| label: umap-visualization-1
-#| output: false
 
-# # Visualizar primeras 4 iteraciones
-fig, axes = plt.subplots(2, 4, figsize=(25, 12))
-axes = axes.flatten()
-
-for idx, n_iter in enumerate(iterations_to_show[:4]):
-    ax = axes[idx]
-    Y_1d = umap_results[n_iter]['embedding']
-    cross_entropy = umap_results[n_iter]['cross_entropy']
-    
-    for i, (color, name) in enumerate(zip(DIGIT_COLORS, ['Cluster 1', 'Cluster 2', 'Cluster 3'])):
-        mask = labels == i
-        ax.scatter(Y_1d[mask], np.zeros(np.sum(mask)), c=color, label=name if idx == 0 else "",
-                  alpha=0.4, s=25)
-    
-    for i in range(3):
-        cluster_center = np.mean(Y_1d[labels == i])
-        ax.axvline(cluster_center, color=DIGIT_COLORS[i], alpha=0.6, linestyle='--', linewidth=2)
-        ax.text(cluster_center, 0.05, f'C{i+1}', ha='center', va='bottom', 
-                color=DIGIT_COLORS[i], fontweight='bold', fontsize=10)
-    
-    ax.set_title(f'Iteración {n_iter}\nEntropía Cruzada: {cross_entropy:.3f}', 
-                 fontsize=12, fontweight='bold')
-    ax.set_xlabel('Coordenada UMAP (R¹)', fontsize=10)
-    ax.set_ylabel('')
-    ax.set_yticks([])
-    ax.set_ylim(-0.1, 0.1)
-    ax.grid(True, alpha=0.3, axis='x')
-    
-    if idx == 0:
-        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-
-plt.suptitle('Evolución de UMAP Personalizado', fontsize=14, fontweight='bold', y=1.02)
-plt.tight_layout()
-plt.show()
-```
-
-```{python}
-#| label: umap-visualization-2
-#| output: false
-
-# Visualizar últimas 4 iteraciones
-fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-axes = axes.flatten()
-
-for idx, n_iter in enumerate(iterations_to_show[4:]):
-    ax = axes[idx]
-    Y_1d = umap_results[n_iter]['embedding']
-    cross_entropy = umap_results[n_iter]['cross_entropy']
-    
-    for i, (color, name) in enumerate(zip(DIGIT_COLORS, ['Cluster 1', 'Cluster 2', 'Cluster 3'])):
-        mask = labels == i
-        ax.scatter(Y_1d[mask], np.zeros(np.sum(mask)), c=color, label=name if idx == 0 else "", 
-                  alpha=0.4, s=25)
-    
-    for i in range(3):
-        cluster_center = np.mean(Y_1d[labels == i])
-        ax.axvline(cluster_center, color=DIGIT_COLORS[i], alpha=0.6, linestyle='--', linewidth=2)
-        ax.text(cluster_center, 0.05, f'C{i+1}', ha='center', va='bottom', 
-                color=DIGIT_COLORS[i], fontweight='bold', fontsize=10)
-    
-    ax.set_title(f'Iteración {n_iter}\nEntropía Cruzada: {cross_entropy:.3f}', fontsize=12, fontweight='bold')
-    ax.set_xlabel('Coordenada UMAP (R¹)', fontsize=10)
-    ax.set_ylabel('')
-    ax.set_yticks([])
-    ax.set_ylim(-0.1, 0.1)
-    ax.grid(True, alpha=0.3, axis='x')
-    
-    if idx == 0:
-        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-
-plt.suptitle('Evolución de UMAP Personalizado (Iteraciones 100-1000)', fontsize=14, fontweight='bold', y=1.02)
-plt.tight_layout()
-plt.show()
-```
-
-```{python}
-#| label: umap-convergence
-#| output: asis
-# Gráfico de convergencia (entropía cruzada vs iteraciones)
-plt.figure(figsize=(10, 6))
-iterations = sorted(umap_results.keys())
-cross_entropies = [umap_results[iter]['cross_entropy'] for iter in iterations]
-
-plt.plot(iterations, cross_entropies, 'bo-', linewidth=2, markersize=8, color=DIGIT_COLORS[0])
-plt.xlabel('Número de Iteraciones', fontsize=12)
-plt.ylabel('Entropía Cruzada', fontsize=12)
-plt.title('Convergencia de UMAP', fontsize=14, fontweight='bold')
-plt.grid(True, alpha=0.3)
-plt.yscale('log')
-plt.tight_layout()
-plt.show()
-```
-
-```{python}
-#| label: umap-cluster-analysis
-#| output: asis
-# Análisis de separación de clusters en DataFrame
-cluster_analysis = []
-
-for n_iter in iterations_to_show:
-    Y_1d = umap_results[n_iter]['embedding']
-    
-    # Calcular centros de clusters
-    centers = []
-    for i in range(3):
-        center = np.mean(Y_1d[labels == i])
-        centers.append(center)
-    
-    # Calcular distancias entre centros
-    distances = []
-    for i in range(3):
-        for j in range(i+1, 3):
-            dist = abs(centers[i] - centers[j])
-            distances.append(dist)
-    
-    avg_separation = np.mean(distances)
-    
-    # Calcular varianza intra-cluster
-    intra_cluster_var = []
-    for i in range(3):
-        cluster_points = Y_1d[labels == i]
-        center = centers[i]
-        squared_distances = (cluster_points - center) ** 2
-        variance = np.mean(squared_distances)
-        intra_cluster_var.append(variance)
-    
-    avg_intra_var = np.mean(intra_cluster_var)
-    separation_ratio = avg_separation / (avg_intra_var + 1e-10)
-    
-    cluster_analysis.append({
-        'Iteración': n_iter,
-        'Separación Promedio': avg_separation,
-        'Varianza Intra-cluster': avg_intra_var,
-        'Ratio de Separación': separation_ratio
-    })
-
-# Crear DataFrame con el análisis
-df_cluster_analysis = pd.DataFrame(cluster_analysis)
-
-# Formatear el DataFrame para mejor visualización
-df_cluster_analysis = df_cluster_analysis.round(3)
-
-# Mostrar el DataFrame con estilo
-styled_df = df_cluster_analysis.style.set_properties(**{
-    'text-align': 'center',
-    'font-size': '12pt',
-    'padding': '5px'
-}).set_table_styles([
-    {'selector': 'th',
-     'props': [('background-color', '#f0f0f0'),
-               ('font-weight', 'bold'),
-               ('text-align', 'center'),
-               ('padding', '5px')]},
-    {'selector': 'td',
-     'props': [('text-align', 'center'),
-               ('padding', '5px')]}
-])
-
-display(styled_df)
-```
-
-Este ejemplo muestra:
-
-1.  **Generación de datos:**
-    -   Tres clusters gaussianos en $\mathbb{R}^2$
-    -   Cada cluster tiene 100 puntos
-    -   Diferentes medias y varianzas para cada cluster
-2.  **Implementación paso a paso:**
-    -   Cálculo de probabilidades en alta dimensión ($p_{ij}$)
-    -   Cálculo de probabilidades en baja dimensión ($q_{ij}$)
-    -   Cálculo del gradiente
-    -   Actualización de posiciones con momentum
-3.  **Visualización del proceso:**
-    -   Datos originales en $\mathbb{R}^2$
-    -   Proyección en $\mathbb{R}^1$ en diferentes iteraciones
-    -   Comparación con la implementación de scikit-learn
-4.  **Observaciones:**
-    -   Los clusters se separan gradualmente
-    -   El momentum ayuda a evitar mínimos locales
-    -   La estructura de vecindad se preserva en la proyección
 
 ## Ventajas Clave de UMAP
 
