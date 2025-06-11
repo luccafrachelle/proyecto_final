@@ -13,6 +13,8 @@ background-transition: fade
 format:
   revealjs: 
     theme: white
+    slide-number: true
+    show-slide-number: print
 fontsize: 20pt
 
 ---
@@ -50,7 +52,7 @@ from scipy.stats import spearmanr
 import warnings
 
 # Configuración de estilo consistente para todos los gráficos
-plt.style.use('custom_style.mplstyle')
+plt.style.use('./src/custom_style.mplstyle')
 sns.set_palette("husl")
 
 DIGIT_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
@@ -457,7 +459,7 @@ plt.show()
 
 
 
-## UMAP: Reducción de Dimensionalidad Basada en Topología
+# UMAP
 
 UMAP (Uniform Manifold Approximation and Projection) trasciende la mera visualización de datos. Es un algoritmo robusto diseñado para **preservar la estructura topológica intrínseca** de datos de alta dimensión al proyectarlos a un espacio de menor dimensionalidad (e.g., 2D o 3D).
 
@@ -491,7 +493,7 @@ Observemos un conjunto de datos bidimensional de ejemplo, una "onda sinusoidal r
 
 A diferencia de métodos que emplean un radio fijo para estos conjuntos abiertos, UMAP **adapta el tamaño de cada conjunto abierto** basándose en la densidad local de los datos.
 
-## **Ilustración: Cubierta con Radios Fijos**
+## Cubierta con Radios Fijos
 ![](./img/img3.webp){fig-align="center"}
 <figcaption>
 Esta figura (<code>img3.webp</code>) ilustra una cubierta generada con radios fijos. Se observa que esta aproximación es ineficaz para capturar la estructura local, ya que no se ajusta a las variaciones de densidad, resultando en coberturas inadecuadas en regiones dispersas y solapamientos excesivos en regiones densas.
@@ -501,7 +503,7 @@ Una cubierta con un radio globalmente fijo puede llevar a una representación im
 
 ---
 
-## Adaptación de la Métrica: Densidad y Uniformidad Local
+## Uniformidad Local
 
 Para garantizar que todas las vecindades locales muestren una **uniformidad de muestreo aparente**, UMAP implementa una re-escalación adaptativa de la métrica en cada vecindad. Esto se conceptualiza como un ajuste del "volumen" efectivo de la vecindad de $k$ puntos alrededor de cada dato.
 
@@ -509,7 +511,7 @@ Este ajuste métrico se logra calculando un valor $\sigma_i$ (sigma local) para 
 
 $$\sum_{j=1}^{k} \exp\left(-\frac{d(X_i, X_j) - \rho_i}{\sigma_i}\right) = \log_2(k)$$
 
-## {.smaller}
+## Uniformidad Local{.smaller}
 $$\sum_{j=1}^{k} \exp\left(-\frac{d(X_i, X_j) - \rho_i}{\sigma_i}\right) = \log_2(k)$$
 
 Desglosemos los términos:
@@ -519,12 +521,11 @@ Desglosemos los términos:
 * $d(X_i, X_j)$: La **distancia euclidiana** (o la métrica seleccionada) entre $X_i$ y cada vecino $X_j$ en el espacio de alta dimensión.
 * $\rho_i$ (rho): La **distancia al primer vecino no cero** de $X_i$, es decir, la distancia más pequeña a cualquier otro punto.
 * $\sigma_i$ (sigma): El **parámetro de escala local** calculado para cada $X_i$. Un $\sigma_i$ pequeño indica una compresión efectiva de las distancias (región densa), mientras que un $\sigma_i$ grande indica un estiramiento (región dispersa).
-* $\exp(\dots)$: La función exponencial. Transforma las distancias en "probabilidades de conexión", donde distancias menores resultan en probabilidades mayores.
 * $\log_2(k)$: Un **valor objetivo constante**. Asegura que, en promedio, la suma de las probabilidades de conexión de los $k$ vecinos de $X_i$ sea $\log_2(k)$, normalizando la "conectividad efectiva" de cada punto.
 
 **Impacto:** Este procedimiento resulta en una **distribución uniforme local simulada**, garantizando que las vecindades de los puntos se comporten de manera consistente, independientemente de la densidad original de los datos.
 
-## **Ilustración: Cubierta Adaptada por Densidad **
+## Cubierta Adaptada por Densidad 
 ![](./img/img6.webp){fig-align="center"}
 <figcaption>
 Esta figura muestra la onda sinusoidal con los conjuntos abiertos ajustados por la densidad. Los radios son menores en regiones densas y mayores en regiones dispersas, logrando una "cobertura uniforme" de la variedad en términos de conectividad local.
@@ -536,7 +537,7 @@ Esta figura muestra la onda sinusoidal con los conjuntos abiertos ajustados por 
 
 El ajuste dinámico de $\sigma_i$ y $\rho_i$ produce una métrica localmente adaptada que hace que los puntos se "sientan" uniformemente distribuidos. Conceptualmente, esto puede visualizarse como una deformación del espacio alrededor de cada punto, donde las bolas de radios fijos se "estiran" o "comprimen" para lograr una densidad efectiva constante.
 
-## **Ilustración: Espacio Métrico Adaptado**{.smaller}
+## Espacio Métrico Adaptado{.smaller}
 ![](./img/img8.webp){fig-align="center"}
 <figcaption>
 Esta figura representa cómo UMAP ajusta dinámicamente las distancias entre los puntos (visualizado como el "estiramiento" o "compresión" de las regiones espaciales) para lograr una densidad efectiva uniforme en todo el espacio de datos. Los puntos en regiones más densas se "separan" efectivamente de sus vecinos, mientras que los puntos en regiones más dispersas se "acercan" artificialmente, nivelando la percepción de la densidad local.
@@ -545,7 +546,7 @@ Este ajuste es fundamental para que el "Fuzzy Simplicial Set" final refleje con 
 
 ---
 
-## Construcción del Grafo Ponderado: El "Fuzzy Simplicial Set"
+## Construcción del Grafo Ponderado
 
 Una vez que los parámetros de escala local ($\sigma_i$ y $\rho_i$) han sido determinados para cada punto, UMAP calcula los "scores de similaridad" entre cada punto $X_i$ y sus vecinos $X_j$. Estos scores representan la **fuerza de conexión** probabilística entre los puntos:
 
@@ -555,7 +556,7 @@ Aquí, $s_{ij}$ es el **score de similaridad** (o "probabilidad de conexión") d
 
 Estos scores se utilizan para construir un **grafo de conectividad ponderado global**. Cada punto de datos se convierte en un nodo del grafo, y las conexiones entre $X_i$ y $X_j$ son aristas con un peso $W_{ij}$. Este grafo se conceptualiza como un **Conjunto Simplicial Difuso (Fuzzy Simplicial Set)**.
 
-## **Ilustración: Grafo de Conectividad **
+## Grafo de Conectividad 
 ![](./img/img4.webp){fig-align="center"}
 <figcaption>
 Esta figura muestra el complejo simplicial construido a partir de las conexiones (aristas) y posibles símplices de orden superior (regiones sombreadas) sobre la onda sinusoidal, representando la estructura topológica inferida.
@@ -563,7 +564,7 @@ Esta figura muestra el complejo simplicial construido a partir de las conexiones
 
 ---
 
-## La Propiedad "Fuzzy": Unificación de Conexiones Bidireccionales {.smaller}
+## Fuzzy Simplicial Set
 
 La característica "difusa" (fuzzy) de los Conjuntos Simpliciales radica en que las conexiones no son binarias (sí/no), sino que poseen un **grado de pertenencia** (un valor continuo entre 0 y 1). Para consolidar los scores $s_{ij}$ y $s_{ji}$ (ya que la similaridad de $X_i$ a $X_j$ puede diferir de $X_j$ a $X_i$ debido a sus $\sigma$ y $\rho$ individuales), UMAP emplea la siguiente fórmula:
 
@@ -575,22 +576,8 @@ Análisis de la fórmula:
 * $s_{ij}$: El score de similaridad calculado de $X_i$ a $X_j$.
 * $s_{ji}$: El score de similaridad calculado de $X_j$ a $X_i$.
 
-Esta operación es una **"unión difusa"**. Es fundamental comprender que esta no es una operación de promediado. Promediar diluiría la información crucial inherente a una conexión fuerte. Si $X_i$ percibe a $X_j$ como un vecino muy cercano (alto $s_{ij}$), o si $X_j$ percibe a $X_i$ como un vecino muy cercano (alto $s_{ji}$), es deseable que esta fuerte conexión se mantenga en la representación topológica final. La unión difusa garantiza que la existencia de una conexión significativa en **al menos una de las direcciones** (ida o vuelta) contribuya de manera robusta al peso combinado. Conceptualmente, si $X_i$ está conectado a $X_j$, **o** $X_j$ está conectado a $X_i$, entonces $X_i$ y $X_j$ están considerados conectados en el grafo global.
 
-Este grafo ponderado constituye la **aproximación topológica de la variedad** subyacente en el espacio de alta dimensión, capturando tanto las relaciones de proximidad como las características geométricas locales de una manera flexible y probabilística.
-
-## Producto Final: El Grafo de Conectividad en Alta Dimensión{.smaller}
-
-Como resultado de todos los pasos previos (adaptación métrica local, cálculo de scores de similaridad y unión difusa), el proceso de UMAP culmina en la construcción de un **grafo de conectividad ponderado** en el espacio de alta dimensión.
-
-En este grafo:
-* Cada **nodo** representa un punto de dato original.
-* Cada **arista** entre dos nodos indica una relación de similaridad o conectividad entre esos puntos.
-* El **peso** de cada arista ($W_{ij}$) cuantifica la fuerza de esa similaridad, calculada a través de la unión difusa.
-
-Este grafo ponderado puede ser convenientemente representado como una **matriz de similaridad dispersa**. En esta matriz, las filas y columnas corresponden a los puntos de datos, y cada entrada $(i, j)$ contiene el peso $W_{ij}$ de la arista que conecta el punto $i$ con el punto $j$. Dado que UMAP se enfoca en los $k$ vecinos más cercanos, la mayoría de las entradas de esta matriz serán cero, de ahí su naturaleza dispersa.
-
-## **Ejemplo Conceptual de Matriz de Similaridad **
+## Matriz de Similaridad
 
 | Punto | $P_1$ | $P_2$ | $P_3$ | $P_4$ | $P_5$ |
 | :---- | :---- | :---- | :---- | :---- | :---- |
@@ -607,7 +594,7 @@ Esta tabla ilustra una porción conceptual de la matriz de similaridad dispersa.
 
 ---
 
-## De Alta a Baja Dimensión: El Proceso de Embedificación
+## Representación en Baja Dimensión
 
 Una vez que UMAP ha construido el **Conjunto Simplicial Difuso (Fuzzy Simplicial Set)** en el espacio de alta dimensión, que encapsula la estructura topológica y las similaridades probabilísticas ($W_{ij}$), el siguiente paso es encontrar una representación de estos datos en un espacio de menor dimensionalidad (e.g., $\mathbb{R}^2$ o $\mathbb{R}^3$).
 
@@ -615,7 +602,7 @@ El objetivo es generar una incrustación $Y = \{y_1, \dots, y_N\} \subset \mathb
 
 ---
 
-## Modelado de la Similitud en Baja Dimensión: El Kernel de Cauchy{.smaller}
+## Modelado de la Similitud en Baja Dimensión 
 
 Para cuantificar la "similaridad" o "conectividad" entre los puntos $y_i$ y $y_j$ en el espacio de baja dimensión, UMAP emplea una función de kernel específica, elegida por sus propiedades deseables para la optimización y la visualización:
 
@@ -626,42 +613,27 @@ Analicemos los componentes de esta fórmula y su propósito:
 * $w_{ij}$: Representa la **similaridad o probabilidad de conexión** entre las proyecciones $y_i$ y $y_j$ en el espacio de baja dimensión. Este es el homólogo de $W_{ij}$ pero definido en el espacio de salida.
 * $d(y_i, y_j)$: Es la **distancia euclidiana** entre $y_i$ y $y_j$ en el espacio de baja dimensión.
 * $a$ y $b$: Son **parámetros de UMAP** derivados de los hiperparámetros `min_dist` y `spread`.
-    * `min_dist`: Este parámetro controla la distancia mínima que los puntos pueden tener en el espacio de baja dimensión. Un `min_dist` pequeño (cercano a 0) permite que los puntos se agrupen densamente, mientras que un `min_dist` mayor los fuerza a separarse más, resultando en agrupaciones más difusas.
-    * `spread`: Este parámetro controla la dispersión de los puntos, influenciando la escala a la que se interpretan las distancias. Un `spread` más alto permite que los puntos se dispersen más ampliamente.
-    * Los valores de $a$ y $b$ se ajustan para que la curva de decaimiento de la conectividad en baja dimensión (`min_dist` y `spread`) se alinee lo mejor posible con la curva de decaimiento del espacio de alta dimensión ($\sigma_i$ y $\rho_i$), creando una correspondencia métrica.
 ---
 
-## El Problema de Optimización: Minimización de la Divergencia de Entropía Cruzada {.smaller}
-
-El corazón de la incrustación de UMAP reside en la minimización de la "divergencia" entre el grafo de conectividad en alta dimensión ($W_{ij}$) y el grafo en baja dimensión ($w_{ij}$). Esto se formula como la minimización de la **divergencia de la sección cruzada de la entropía (Cross-Entropy)**, una medida estándar para la diferencia entre dos distribuciones de probabilidad.
+## Función de costos
 
 La función objetivo que UMAP busca minimizar es:
-
 $$L(Y) = \sum_{i \neq j} \left[ W_{ij} \log\left(\frac{W_{ij}}{w_{ij}}\right) + (1 - W_{ij}) \log\left(\frac{1 - W_{ij}}{1 - w_{ij}}\right) \right]$$
 
 Donde:
+
 * $W_{ij}$: La **probabilidad de conexión** entre $X_i$ y $X_j$ en el espacio de **alta dimensión** (un valor entre 0 y 1).
+
 * $w_{ij}$: La **probabilidad de conexión** entre $y_i$ y $y_j$ en el espacio de **baja dimensión** (calculada con el kernel de Cauchy).
 
-**Interpretación de los Términos de la Función de Pérdida y sus Gradientes:**
-
 1.  **Término de Atracción (primer término):** $W_{ij} \log\left(\frac{W_{ij}}{w_{ij}}\right)$
-    * Cuando $W_{ij}$ es alto (los puntos están conectados en alta dimensión) y $w_{ij}$ es bajo (están lejos en baja dimensión), este término se vuelve grande y positivo, generando una penalización significativa.
-    * El gradiente de este término tiende a **acercar** los puntos $y_i$ y $y_j$.
 
 2.  **Término de Repulsión (segundo término):** $(1 - W_{ij}) \log\left(\frac{1 - W_{ij}}{1 - w_{ij}}\right)$
-    * Cuando $W_{ij}$ es bajo (los puntos no están conectados en alta dimensión) y $w_{ij}$ es alto (están demasiado cerca en baja dimensión), este término también se vuelve grande, penalizando la proximidad.
-    * El gradiente de este término tiende a **alejar** los puntos $y_i$ y $y_j$.
 
-La minimización de esta función de costo guía el proceso de ajuste de las posiciones de los puntos en el espacio de baja dimensión, buscando una configuración óptima que preserve la topología probabilística del espacio original.
 
 ---
 
-## Algoritmo de Optimización: Descenso de Gradiente Estocástico (SGD){.smaller}
-
-La minimización de la función de pérdida $L(Y)$ se realiza mediante un proceso iterativo de **Descenso de Gradiente Estocástico (Stochastic Gradient Descent - SGD)**.
-
-Las etapas clave son:
+## Descenso de Gradiente Estocástico 
 
 1.  **Inicialización del Embedding:**
     * Para acelerar la convergencia y proporcionar un punto de partida razonable, los puntos $y_i$ en el espacio de baja dimensión se inicializan comúnmente utilizando una **incrustación espectral** (e.g., basada en los vectores propios del Laplaciano normalizado del grafo de conectividad de alta dimensión). Alternativamente, se puede usar una inicialización aleatoria.
@@ -669,8 +641,8 @@ Las etapas clave son:
 2.  **Muestreo de Aristas y No-Aristas:**
     * En cada iteración del SGD, se selecciona aleatoriamente una arista (un par $(i, j)$ con $W_{ij} > 0$) de la matriz de similaridad en alta dimensión. Para este par, se aplica una **fuerza de atracción** a $y_i$ y $y_j$.
     * Para la repulsión, UMAP emplea **muestreo negativo**. En lugar de considerar todos los pares no conectados (lo que sería computacionalmente inviable para grandes datasets, $O(N^2)$), se muestrean aleatoriamente varios puntos $y_k$ que no están conectados a $y_i$. Para estos pares $(i, k)$, se aplica una **fuerza de repulsión**. La proporción de muestras negativas por muestra positiva es un parámetro configurable.
-    
-## Algoritmo de Optimización: Descenso de Gradiente Estocástico (SGD){.smaller}
+
+## Descenso de Gradiente Estocástico 
 
 3.  **Cálculo de Gradientes y Actualización de Posiciones:**
     * Se calculan las derivadas parciales de la función de pérdida $L$ con respecto a las coordenadas de los puntos $y_i$ y $y_j$.
@@ -681,27 +653,28 @@ Las etapas clave son:
     * El proceso de optimización se ejecuta durante un número predefinido de épocas (`n_epochs`).
     * A menudo, las fuerzas repulsivas se ponderan más fuertemente al inicio de la optimización para asegurar que los puntos se dispersen adecuadamente y no queden atrapados en mínimos locales apretados. A medida que avanza la optimización, el equilibrio entre atracción y repulsión se ajusta para permitir que las agrupaciones se refinen.
 
----
 
-## Impacto de Parámetros Clave en la Embedificación{.smaller}
-
-La calidad y la interpretación de la incrustación de UMAP están significativamente influenciadas por varios hiperparámetros, que afectan directamente la función de pérdida y el proceso de optimización:
+## Hiperparámetros
 
 * **`n_neighbors` (Número de vecinos):** Este parámetro (usado en la fase de alta dimensión para construir el k-NN graph) tiene un impacto crucial en la balance entre la preservación de la estructura local y global en la incrustación final.
     * **Valores pequeños:** Enfatizan la estructura local, lo que puede llevar a una fragmentación de la incrustación y a la aparición de muchos clústeres pequeños y separados.
     * **Valores grandes:** Permiten que UMAP considere más la estructura global de los datos, lo que puede resultar en una vista más cohesiva, pero quizás menos detallada de las relaciones locales.
+
+## Hiperparámetros
 
 * **`min_dist` (Distancia Mínima):** Directamente relacionado con el parámetro `a` del kernel de Cauchy.
     * Controla cuán cerca se pueden agrupar los puntos en la incrustación de baja dimensión.
     * **`min_dist` pequeño (cercano a 0):** Los puntos pueden agruparse de forma muy densa, lo que es útil para visualizar clústeres bien separados y compactos.
     * **`min_dist` grande:** Los puntos son forzados a estar más dispersos, lo que puede revelar una estructura más continua y fluida, o separar clústeres que de otra manera se solaparían visualmente.
 
+## Hiperparámetros
+
 * **`spread` (Dispersión):** Directamente relacionado con el parámetro `b` del kernel de Cauchy.
     * Controla la dispersión general del embedding.
     * **`spread` pequeño:** Resulta en una incrustación más compacta.
     * **`spread` grande:** Permite que la incrustación se extienda más, útil para visualizar la jerarquía global.
 
-## Impacto de Parámetros Clave en la Embedificación{.smaller}
+## Hiperparámetros
 
 * **`n_epochs` (Número de Épocas):**
     * Define el número de iteraciones del algoritmo de optimización SGD.
@@ -709,3 +682,515 @@ La calidad y la interpretación de la incrustación de UMAP están significativa
     * Para datasets grandes o embeddings de alta calidad, un `n_epochs` elevado es recomendable.
 
 Estos parámetros permiten al usuario ajustar el equilibrio entre la preservación de la estructura local y global, y la densidad visual de la incrustación resultante, adaptando UMAP a diversas necesidades de análisis y visualización.
+
+## Proyección de Datos No Vistos en UMAP
+
+1.  **Cálculo de Distancias a los Vecinos más Cercanos Aprendidos:** Para cada nuevo punto $x_{\text{new},i} \in X_{\text{new}}$, UMAP identifica sus $k$ vecinos más cercanos dentro del conjunto de datos de entrenamiento original $X_{\text{train}}$. Se calculan las distancias $d(x_{\text{new},i}, x_j)$ a estos vecinos.
+
+## Proyección de Datos No Vistos en UMAP
+
+2.  **Inferencia de Probabilidades de Conexión:** Utilizando los parámetros $\sigma_j$ y $\rho_j$ aprendidos de los vecinos del conjunto de entrenamiento, se infieren las probabilidades de conexión para el nuevo punto con sus vecinos más cercanos. Esto se asemeja al cálculo de $s_{ij}$ en la fase de construcción del grafo:
+    $$s_{\text{new},ij} = \exp\left(-\frac{d(x_{\text{new},i}, x_j) - \rho_j}{\sigma_j}\right)$$
+    donde $x_j$ son los vecinos de $x_{\text{new},i}$ en $X_{\text{train}}$.
+
+## Proyección de Datos No Vistos en UMAP
+
+3.  **Localización en el Espacio de Baja Dimensión:** El nuevo punto $y_{\text{new},i}$ se inserta en el espacio de baja dimensión de tal manera que sus probabilidades de conexión con los puntos de entrenamiento cercanos $y_j$ (ya incrustados) sean lo más similares posible a las probabilidades inferidas en alta dimensión. Esto se logra minimizando una función de costo similar a la utilizada en la fase de entrenamiento, pero manteniendo fijos los puntos del conjunto de entrenamiento $y_j$.
+    $$L(y_{\text{new},i}) = \sum_{j \in \text{vecinos}(x_{\text{new},i})} \left[ s_{\text{new},ij} \log\left(\frac{s_{\text{new},ij}}{w_{\text{new},ij}}\right) + (1 - s_{\text{new},ij}) \log\left(\frac{1 - s_{\text{new},ij}}{1 - w_{\text{new},ij}}\right) \right]$$
+    donde $w_{\text{new},ij}$ es la probabilidad de conexión en baja dimensión entre $y_{\text{new},i}$ y $y_j$, calculada con el kernel de Cauchy:
+    $$w_{\text{new},ij} = \frac{1}{1 + a(d(y_{\text{new},i}, y_j))^ {2b}}$$
+
+# Aplicaciones
+
+## t-SNE
+
+### Proceso de Optimización de t-SNE
+
+```{python}
+#| label: load-data
+#| output: asis
+
+# Cargar el dataset de dígitos
+digits = datasets.load_digits(n_class=10)
+X = digits.data  
+y = digits.target 
+
+```
+```{python}
+#| label: optimization-visualization
+#| output: asis
+
+def plot_optimization_process(X, y, n_steps=6):
+    """Visualiza el proceso de optimización de t-SNE en diferentes iteraciones."""
+    n_iter = 1000
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+    axes = axes.flatten()
+
+    iterations_to_plot = np.linspace(250, n_iter, n_steps).astype(int)
+    if iterations_to_plot[-1] < 250:
+        iterations_to_plot[-1] = 250
+    
+    for i, iter in enumerate(iterations_to_plot):
+        tsne = TSNE(n_components=2, 
+                   init='random',
+                   random_state=42,
+                   perplexity=30,
+                   n_iter=iter)
+        
+        Y = tsne.fit_transform(X)
+        
+        ax = axes[i]
+        for digit in range(10):
+            mask = y == digit
+            ax.scatter(Y[mask, 0], Y[mask, 1], 
+                      c=[DIGIT_COLORS[digit]], 
+                      label=f'{digit}' if i == 0 else "")
+        
+        ax.set_title(f'Iteración {iter}')
+        ax.set_xlabel('t-SNE 1')
+        ax.set_ylabel('t-SNE 2')
+        ax.set_aspect('equal')
+        ax.grid(True, alpha=0.3)
+        
+        if i == 0:
+            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    plt.suptitle('Evolución de la Proyección t-SNE', fontsize=14, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    plt.show()
+plot_optimization_process(X, y)
+```
+
+## Hiperparámetros t-SNE
+
+```{python}
+#| label: hyperparameter-effects
+#| output: asis
+
+def plot_perplexity_effect(X, y):
+    """Visualiza el efecto de diferentes perplejidades en t-SNE."""
+    perplexities = [5, 30, 50]
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    
+    for i, perp in enumerate(perplexities):
+        tsne = TSNE(n_components=2, 
+                   init='random',
+                   random_state=42,
+                   perplexity=perp)
+        Y = tsne.fit_transform(X)
+        
+        ax = axes[i]
+        for digit in range(10):
+            mask = y == digit
+            ax.scatter(Y[mask, 0], Y[mask, 1], 
+                      c=[DIGIT_COLORS[digit]], 
+                      label=f'{digit}' if i == 0 else "")
+        ax.set_title(f'Perplexity = {perp}')
+        ax.set_xlabel('t-SNE 1')
+        ax.set_ylabel('t-SNE 2')
+        ax.set_aspect('equal')
+        ax.grid(True, alpha=0.3)
+        
+        if i == 0:
+            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    plt.suptitle('Efecto de la Perplejidad en t-SNE', fontsize=14, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    plt.show()
+
+def plot_learning_rate_effect(X, y):
+    """Visualiza el efecto de diferentes tasas de aprendizaje en t-SNE."""
+    learning_rates = [50, 200, 1000]
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5)) # Cambiado a figsize=(15, 5) para que los gráficos de learning rate también tengan 3 subplots en una fila y sean más grandes
+    
+    for i, lr in enumerate(learning_rates):
+        tsne = TSNE(n_components=2, 
+                   init='random',
+                   random_state=42,
+                   learning_rate=lr)
+        Y = tsne.fit_transform(X)
+        
+        ax = axes[i]
+        for digit in range(10):
+            mask = y == digit
+            ax.scatter(Y[mask, 0], Y[mask, 1], 
+                      c=[DIGIT_COLORS[digit]], 
+                      label=f'{digit}' if i == 0 else "")
+        ax.set_title(f'Learning Rate = {lr}')
+        ax.set_xlabel('t-SNE 1')
+        ax.set_ylabel('t-SNE 2')
+        ax.set_aspect('equal')
+        ax.grid(True, alpha=0.3)
+        
+        if i == 0:
+            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    plt.suptitle('Efecto del Learning Rate en t-SNE', fontsize=14, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    plt.show()
+
+
+plot_perplexity_effect(X, y)
+```
+
+## Hiperparámetros t-SNE
+
+```{python}
+#| label: hyperparameter-effectsa
+#| output: asis
+plot_learning_rate_effect(X, y)
+```
+
+## UMAP
+```{python}
+#| label: umap-optimization-process
+#| output: asis
+
+def plot_umap_optimization_process(X, y, n_steps=6):
+    """Visualiza el proceso de optimización de UMAP en diferentes iteraciones."""
+    
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+    axes = axes.flatten()
+    
+    # Iteraciones a visualizar
+    epochs_to_plot = [50, 100, 200, 300, 500, 1000]
+    
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        
+        for i, n_epochs in enumerate(epochs_to_plot):
+            # Crear instancia de UMAP con parámetros consistentes
+            umap_model = UMAP(
+                n_components=2,
+                n_neighbors=15,
+                min_dist=0.1,
+                n_epochs=n_epochs,
+                random_state=42,
+                verbose=False
+            )
+            
+            Y = umap_model.fit_transform(X)
+            
+            # Crear scatter plot usando DIGIT_COLORS
+            ax = axes[i]
+            for digit in range(10):
+                mask = y == digit
+                ax.scatter(Y[mask, 0], Y[mask, 1], 
+                          c=[DIGIT_COLORS[digit]], 
+                          label=f'{digit}' if i == 0 else "")
+            
+            ax.set_title(f'Interación: {n_epochs}', fontsize=12, fontweight='bold')
+            ax.set_xlabel('UMAP 1', fontsize=10)
+            ax.set_ylabel('UMAP 2', fontsize=10)
+            ax.set_aspect('equal')
+            ax.grid(True, alpha=0.3)
+            
+            if i == 0:
+                ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    plt.suptitle('Evolución de la Proyección UMAP por Épocas', fontsize=14, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    plt.show()
+```
+
+```{python}
+#| label: umap-implementation
+#| output: false
+
+import numpy as np
+from sklearn.decomposition import PCA
+
+def compute_high_dim_probabilities(X, n_neighbors=15, min_dist=0.1):
+    """Calcular probabilidades en alta dimensión usando UMAP"""
+    n_samples = X.shape[0]
+    distances = np.sum((X[:, np.newaxis] - X[np.newaxis, :])**2, axis=2)
+    knn_indices = np.argsort(distances, axis=1)[:, 1:n_neighbors+1]
+    knn_distances = np.array([distances[i, knn_indices[i]] for i in range(n_samples)])
+    sigmas = np.zeros(n_samples)
+    for i in range(n_samples):
+        sigma_min = 0
+        sigma_max = 1000
+        target = np.log2(n_neighbors)
+        for _ in range(50):
+            sigma = (sigma_min + sigma_max) / 2
+            n_neighbors_est = np.sum(np.exp(-knn_distances[i] / sigma))
+            if n_neighbors_est > target:
+                sigma_max = sigma
+            else:
+                sigma_min = sigma
+        sigmas[i] = sigma
+    p_ij = np.zeros((n_samples, n_samples))
+    for i in range(n_samples):
+        p_ij[i, knn_indices[i]] = np.exp(-knn_distances[i] / sigmas[i])
+    p_ij = p_ij + p_ij.T - p_ij * p_ij.T
+    p_ij = p_ij / np.sum(p_ij)
+    return p_ij
+
+def compute_low_dim_probabilities(Y, min_dist=0.1):
+    """Calcular probabilidades en baja dimensión usando UMAP"""
+    n_samples = Y.shape[0]
+    distances = np.sum((Y[:, np.newaxis] - Y[np.newaxis, :])**2, axis=2)
+    a = 1.0
+    b = 1.0
+    q_ij = 1 / (1 + a * distances**b)
+    np.fill_diagonal(q_ij, 0)
+    q_ij = q_ij / np.sum(q_ij)
+    return q_ij
+
+def compute_umap_gradient(p_ij, q_ij, Y):
+    n_samples, n_components = Y.shape
+    gradient = np.zeros_like(Y)
+    Y_diff = Y[:, np.newaxis, :] - Y[np.newaxis, :, :]
+    term1 = p_ij * (1 - q_ij)
+    term2 = (1 - p_ij) * q_ij
+    for d in range(n_components):
+        gradient[:, d] = 2 * np.sum(
+            (term1 - term2)[:, :, np.newaxis] * Y_diff[:, :, d:d+1],
+            axis=1
+        ).flatten()
+    return gradient
+
+def umap_custom(X, n_components=1, n_neighbors=15, min_dist=0.1, 
+                learning_rate=1.0, n_epochs=1000, iterations_to_save=[1, 10, 25, 50, 100, 250, 500, 1000]):
+    n_samples = X.shape[0]
+    max_iter = max(iterations_to_save)
+    pca = PCA(n_components=n_components)
+    Y = pca.fit_transform(X) * 0.1
+    p_ij = compute_high_dim_probabilities(X, n_neighbors, min_dist)
+    momentum = 0.8
+    Y_prev = Y.copy()
+    results = {}
+    for epoch in range(max_iter):
+        current_lr = learning_rate * (1 - epoch/max_iter)
+        q_ij = compute_low_dim_probabilities(Y, min_dist)
+        gradient = compute_umap_gradient(p_ij, q_ij, Y)
+        Y_new = Y - current_lr * gradient + momentum * (Y - Y_prev)
+        Y_prev = Y.copy()
+        Y = Y_new
+        current_iter = epoch + 1
+        if current_iter in iterations_to_save:
+            cross_entropy = -np.sum(p_ij * np.log(q_ij + 1e-12) + 
+                                  (1 - p_ij) * np.log(1 - q_ij + 1e-12))
+            results[current_iter] = {
+                'embedding': Y.copy().flatten(),
+                'cross_entropy': cross_entropy
+            }
+    return results
+
+def plot_umap_convergence_metrics(X, y):
+    """Visualiza las métricas de convergencia de UMAP."""
+    
+    n_epochs = 1000
+    step_size = 50
+    epochs = range(50, n_epochs + 1, step_size)
+    
+    # Métricas a seguir
+    distance_correlations = []
+    silhouette_scores = []
+    
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        
+        for epoch in epochs:
+            umap_model = UMAP(
+                n_components=2,
+                n_neighbors=15,
+                min_dist=0.1,
+                n_epochs=epoch,
+                random_state=42,
+                verbose=False
+            )
+            
+            Y = umap_model.fit_transform(X)
+            
+            # Correlación de distancias
+            dist_X = euclidean_distances(X)
+            dist_Y = euclidean_distances(Y)
+            corr, _ = spearmanr(dist_X.flatten(), dist_Y.flatten())
+            distance_correlations.append(corr)
+            
+            # Silhouette score
+            sil_score = silhouette_score(Y, y)
+            silhouette_scores.append(sil_score)
+    
+    # Visualizar métricas
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+    
+    # Correlación de distancias
+    ax1.plot(epochs, distance_correlations, 'b-', label='Correlación de Distancias')
+    ax1.set_title('Evolución de la Correlación de Distancias')
+    ax1.set_xlabel('Época')
+    ax1.set_ylabel('Correlación de Spearman')
+    ax1.grid(True, alpha=0.3)
+    
+    # Silhouette score
+    ax2.plot(epochs, silhouette_scores, 'r-', label='Silhouette Score')
+    ax2.set_title('Evolución del Silhouette Score')
+    ax2.set_xlabel('Época')
+    ax2.set_ylabel('Silhouette Score')
+    ax2.grid(True, alpha=0.3)
+    
+    plt.suptitle('Métricas de Convergencia de UMAP')
+    plt.tight_layout()
+    plt.show()
+
+def plot_umap_n_neighbors_effect(X, y):
+    """Visualiza el efecto de diferentes valores de n_neighbors en UMAP."""
+    n_neighbors_values = [5, 15, 50]
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        
+        for i, n_neighbors in enumerate(n_neighbors_values):
+            umap_model = UMAP(
+                n_components=2,
+                n_neighbors=n_neighbors,
+                min_dist=0.1,
+                random_state=42,
+                verbose=False
+            )
+            
+            Y = umap_model.fit_transform(X)
+            
+            ax = axes[i]
+            for digit in range(10):
+                mask = y == digit
+                ax.scatter(Y[mask, 0], Y[mask, 1], 
+                           c=[DIGIT_COLORS[digit]], 
+                           label=f'{digit}' if i == 0 else "")
+            
+            ax.set_title(f'n_neighbors = {n_neighbors}')
+            ax.set_xlabel('UMAP 1')
+            ax.set_ylabel('UMAP 2')
+            ax.set_aspect('equal')  # Hacer el gráfico cuadrado
+            
+            if i == 0:
+                ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    plt.suptitle('Efecto del Parámetro n_neighbors')
+    plt.tight_layout()
+    plt.show()
+
+def plot_umap_min_dist_effect(X, y):
+    """Visualiza el efecto de diferentes valores de min_dist en UMAP."""
+    min_dist_values = [0.01, 0.1, 0.5]
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        
+        for i, min_dist in enumerate(min_dist_values):
+            umap_model = UMAP(
+                n_components=2,
+                n_neighbors=15,
+                min_dist=min_dist,
+                random_state=42,
+                verbose=False
+            )
+            
+            Y = umap_model.fit_transform(X)
+            
+            ax = axes[i]
+            for digit in range(10):
+                mask = y == digit
+                ax.scatter(Y[mask, 0], Y[mask, 1], 
+                           c=[DIGIT_COLORS[digit]], 
+                           label=f'{digit}' if i == 0 else "")
+            
+            ax.set_title(f'min_dist = {min_dist}')
+            ax.set_xlabel('UMAP 1')
+            ax.set_ylabel('UMAP 2')
+            ax.set_aspect('equal')  # Hacer el gráfico cuadrado
+            
+            if i == 0:
+                ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    plt.suptitle('Efecto del Parámetro min_dist')
+    plt.tight_layout()
+    plt.show()
+
+iterations_to_show = [1, 10, 25, 50, 100, 250, 500, 1000]
+umap_results = umap_custom(X, n_components=1, n_neighbors=15, min_dist=0.1,
+                          learning_rate=1.0, n_epochs=1000, 
+                          iterations_to_save=iterations_to_show)
+```
+
+
+```{python}
+#| label: charts-umap
+#| output: asis
+    plot_umap_optimization_process(X, y)
+```
+
+## Hiperparámetros UMAP
+
+```{python}
+#| label: hyperparameter-effects-n-neighbors
+#| output: asis
+plot_umap_n_neighbors_effect(X, y)
+```
+
+
+## Hiperparámetros UMAP
+
+```{python}
+#| label: hyperparameter-effects-min-dist
+#| output: asis
+plot_umap_min_dist_effect(X, y)
+```
+
+# UMAP para datos no vistos
+
+```{python}
+#| label: umap-for-unseen-data
+#| output: asis
+
+from sklearn.model_selection import train_test_split
+
+# Dividir el dataset en conjuntos de entrenamiento y prueba
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Entrenar UMAP en el conjunto de entrenamiento
+umap_model = UMAP(n_components=2, n_neighbors=15, min_dist=0.1, n_epochs=1000, random_state=42)
+Y_train_umap = umap_model.fit_transform(X_train)
+
+# Transformar el conjunto de prueba usando el modelo entrenado
+Y_test_umap = umap_model.transform(X_test)
+
+# Visualizar los resultados de entrenamiento y prueba
+fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+
+# Gráfico para el conjunto de entrenamiento
+ax1 = axes[0]
+for digit in range(10):
+    mask = y_train == digit
+    ax1.scatter(Y_train_umap[mask, 0], Y_train_umap[mask, 1],
+                c=DIGIT_COLORS[digit],
+                label=f'{digit}',
+                alpha=0.7, s=25)
+ax1.set_title('Proyección UMAP: Conjunto de Entrenamiento', fontsize=14, fontweight='bold', pad=15)
+ax1.set_xlabel('UMAP 1', fontsize=12)
+ax1.set_ylabel('UMAP 2', fontsize=12)
+ax1.set_aspect('equal')
+ax1.grid(True, alpha=0.3)
+ax1.legend(title="Dígito", bbox_to_anchor=(1.05, 1), loc='upper left')
+
+# Gráfico para el conjunto de prueba
+ax2 = axes[1]
+for digit in range(10):
+    mask = y_test == digit
+    ax2.scatter(Y_test_umap[mask, 0], Y_test_umap[mask, 1],
+                c=DIGIT_COLORS[digit],
+                label=f'{digit}',
+                alpha=0.7, s=25)
+ax2.set_title('Proyección UMAP: Conjunto de Prueba (Datos No Vistos)', fontsize=14, fontweight='bold', pad=15)
+ax2.set_xlabel('UMAP 1', fontsize=12)
+ax2.set_ylabel('UMAP 2', fontsize=12)
+ax2.set_aspect('equal')
+ax2.grid(True, alpha=0.3)
+ax2.legend(title="Dígito", bbox_to_anchor=(1.05, 1), loc='upper left')
+
+plt.tight_layout()
+plt.show()
+```

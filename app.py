@@ -347,7 +347,6 @@ st.sidebar.markdown(f"""
 - Dimensiones reducidas: 2
 """)
 
-# Información adicional sobre los parámetros precalculados (en la barra lateral footer)
 st.sidebar.markdown("---")
 st.sidebar.markdown("""
 **Nota sobre Parámetros:**

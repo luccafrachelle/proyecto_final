@@ -1,5 +1,5 @@
 ---
-title: "Análisis y Visualización de Datos de Alta Dimensionalidad con t-SNE y UMAP"
+title: Visualización de Datos de Alta Dimensionalidad con t-SNE y UMAP"
 author: "Lucca Frachelle , Cecilia Waksman"
 date: today
 warning: false
@@ -89,6 +89,13 @@ Existen dos enfoques principales para la reducción de dimensionalidad:
         -   Especialmente útil para la visualización y el descubrimiento de *clusters*.
         -   Puede ser computacionalmente más costoso.
 
+## Graph-based dimensionality reduction
+La idea general de graph-based dimensionality reduction es la siguiente:
+
+1.  Se construye un métrica de similitud entre los datos en el espacio de alta dimensión.
+2. Se busca reecontruir los datos en un espacio de baja dimensión , respetando la similitud entre los datos.
+Esto se hace mediante un algoritmo iteativo que busca optimizar la distancia entre los datos en el espacio de baja dimensión para que coincida con la métrica de similitud en el espacio de alta dimensión.
+
 # Fundamentos Teóricos
 
 ## La Función Softmax
@@ -134,47 +141,6 @@ La divergencia KL puede interpretarse como la esperanza del logaritmo del cocien
 
 Observar que KL no es simétrica, es decir, $KL(P || Q) \neq KL(Q || P)$.
 
-## Fundamentos Topológicos de UMAP
-
-La topología algebraica y la teoría de conjuntos simpliciales son los pilares sobre los que se construye UMAP. Estos conceptos permiten modelar la estructura de los datos de una manera que busca preservar tanto las relaciones locales como globales.
-
-### Conjuntos Simpliciales
-
-Un **símplex** es la generalización de un triángulo a dimensiones arbitrarias:
--   **0-símplex:** un punto (vértice).
--   **1-símplex:** un segmento de línea que une dos puntos (arista).
--   **2-símplex:** un triángulo que une tres puntos (cara).
--   **3-símplex:** un tetraedro.
--   Y así sucesivamente.
-
-Un **complejo simplicial** es una colección de símplices que se intersectan de manera coherente (solo en sus caras comunes). En UMAP, se trabaja con una versión "difusa" de estos conjuntos, donde las conexiones entre puntos tienen pesos que representan la probabilidad de que exista una relación.
-
-### Geometría Riemanniana
-
-UMAP parte de la suposición de que los datos residen en una **variedad (manifold)** de baja dimensión inmersa en un espacio de alta dimensión. La geometría riemanniana proporciona el marco teórico para:
-1.  Definir distancias locales en la variedad.
-2.  Manejar la curvatura de la misma.
-3.  Preservar la estructura topológica durante la proyección a un espacio de menor dimensión.
-
-### Construcción del Grafo de Vecindad
-
-UMAP construye un grafo de vecindad en el espacio de alta dimensión siguiendo estos pasos:
-
-1.  **Cálculo de distancias locales:** Para cada punto, se encuentra la distancia a su k-ésimo vecino más cercano, definiendo un radio de vecindad local.
-2.  **Normalización de distancias:** Las distancias se normalizan usando una función de *kernel* que las convierte en probabilidades de conexión.
-3.  **Simetrización del grafo:** Se crea un grafo no dirigido combinando las probabilidades de conexión en ambas direcciones.
-
-### Función de Costo y Optimización
-
-La función de costo de UMAP se basa en la **entropía cruzada** entre las probabilidades de conexión en el espacio de alta y baja dimensión:
-
-$$C = \sum_{i,j} \left[ w_{ij} \log \left( \frac{w_{ij}}{q_{ij}} \right) + (1-w_{ij}) \log \left( \frac{1-w_{ij}}{1-q_{ij}} \right) \right]$$
-
-donde:
--   $w_{ij}$ es la probabilidad de conexión en el espacio de alta dimensión.
--   $q_{ij}$ es la probabilidad de conexión en el espacio de baja dimensión.
-
-La optimización se realiza mediante un eficiente **descenso de gradiente estocástico**.
 
 # t-SNE: Teoría y Algoritmo
 
@@ -338,7 +304,7 @@ Una variante común del algoritmo t-SNE utiliza PCA (Análisis de Componentes Pr
     -   Puede acelerar la convergencia del algoritmo
     -   Ayuda a evitar mínimos locales pobres
 
-### Ejemplo del algoritmo
+## Ejemplo del algoritmo
 
 A continuación, implementaremos t-SNE paso a paso para proyectar datos de $\mathbb{R}^2$ a $\mathbb{R}^1$. Generaremos tres distribuciones normales con diferentes medias y varianzas, y seguiremos el proceso de optimización en diferentes iteraciones.
 
@@ -496,7 +462,6 @@ tsne_results = tsne_custom(X, n_components=1, iterations_to_save=iterations_to_s
 ```
 
 
-
 ```{python}
 #| label: tsne-visualization
 #| output: asis
@@ -546,111 +511,13 @@ plt.tight_layout()
 plt.show()
 ```
 
-```{python}
-#| label: tsne-convergence
-#| output: asis
-# Gráfico de convergencia (KL divergence vs iteraciones)
-plt.figure(figsize=(10, 6))
-iterations = sorted(tsne_results.keys())
-kl_divergences = [tsne_results[iter]['kl_divergence'] for iter in iterations]
-
-plt.plot(iterations, kl_divergences, 'bo-', linewidth=2, markersize=8)
-plt.xlabel('Número de Iteraciones', fontsize=12)
-plt.ylabel('KL Divergence', fontsize=12)
-plt.title('Convergencia de t-SNE', fontsize=14, fontweight='bold')
-plt.grid(True, alpha=0.3)
-plt.yscale('log')
-plt.tight_layout()
-plt.show()
-```
-
-```{python}
-#| label: tsne-cluster-analysis
-#| output: asis
-# Análisis de separación de clusters en DataFrame
-cluster_analysis = []
-
-for n_iter in iterations_to_show:
-    Y_1d = tsne_results[n_iter]['embedding']
-    
-    # Calcular centros de clusters
-    centers = []
-    for i in range(3):
-        center = np.mean(Y_1d[labels == i])
-        centers.append(center)
-    
-    # Calcular distancias entre centros
-    distances = []
-    for i in range(3):
-        for j in range(i+1, 3):
-            dist = abs(centers[i] - centers[j])
-            distances.append(dist)
-    
-    avg_separation = np.mean(distances)
-    
-    # Calcular varianza intra-cluster
-    intra_cluster_var = []
-    for i in range(3):
-        cluster_points = Y_1d[labels == i]
-        center = centers[i]
-        squared_distances = (cluster_points - center) ** 2
-        variance = np.mean(squared_distances)
-        intra_cluster_var.append(variance)
-    
-    avg_intra_var = np.mean(intra_cluster_var)
-    separation_ratio = avg_separation / (avg_intra_var + 1e-10)
-    
-    cluster_analysis.append({
-        'Iteración': n_iter,
-        'Separación Promedio': avg_separation,
-        'Varianza Intra-cluster': avg_intra_var,
-        'Ratio de Separación': separation_ratio
-    })
-
-# Crear DataFrame con el análisis
-df_cluster_analysis = pd.DataFrame(cluster_analysis)
-
-# Formatear el DataFrame para mejor visualización
-df_cluster_analysis = df_cluster_analysis.round(3)
-
-# Mostrar el DataFrame con estilo
-styled_df = df_cluster_analysis.style.set_properties(**{
-    'text-align': 'center',
-    'font-size': '12pt',
-    'padding': '5px'
-}).set_table_styles([
-    {'selector': 'th',
-     'props': [('background-color', '#f0f0f0'),
-               ('font-weight', 'bold'),
-               ('text-align', 'center'),
-               ('padding', '5px')]},
-    {'selector': 'td',
-     'props': [('text-align', 'center'),
-               ('padding', '5px')]}
-])
-
-display(styled_df)
-```
 
 Este ejemplo muestra:
 
-1.  **Generación de datos:**
+-   **Generación de datos:**
     -   Tres clusters gaussianos en $\mathbb{R}^2$
     -   Cada cluster tiene 100 puntos
     -   Diferentes medias y varianzas para cada cluster
-2.  **Implementación paso a paso:**
-    -   Cálculo de probabilidades en alta dimensión ($p_{ij}$)
-    -   Cálculo de probabilidades en baja dimensión ($q_{ij}$)
-    -   Cálculo del gradiente
-    -   Actualización de posiciones con momentum
-3.  **Visualización del proceso:**
-    -   Datos originales en $\mathbb{R}^2$
-    -   Proyección en $\mathbb{R}^1$ en diferentes iteraciones
-    -   Comparación con la implementación de scikit-learn
-4.  **Observaciones:**
-    -   Los clusters se separan gradualmente
-    -   El momentum ayuda a evitar mínimos locales
-    -   La estructura de vecindad se preserva en la proyección
 
 ## Extensiones y Variaciones
 
@@ -663,11 +530,46 @@ El artículo también discute extensiones como:
 
 # UMAP: Teoría y Algoritmo
 
-UMAP (Uniform Manifold Approximation and Projection) trasciende la mera visualización de datos. Es un algoritmo robusto diseñado para **preservar la estructura topológica intrínseca** de datos de alta dimensión al proyectarlos a un espacio de menor dimensionalidad (e.g., 2D o 3D).
+UMAP (Uniform Manifold Approximation and Projection) es una técnica de reducción de dimensionalidad no lineal desarrollada por Leland McInnes, John Healy y James Melville. Su propósito central es **proyectar datos de alta dimensión en un espacio de menor dimensión** (comúnmente 2D o 3D) para **visualización** o como un paso de **preprocesamiento** en pipelines de aprendizaje automático.
 
-La **estructura topológica** se refiere a las propiedades de conectividad de los datos, como la formación de componentes conectados, ciclos o agujeros. UMAP aborda esta tarea construyendo una representación topológica en el espacio de alta dimensión y optimizando una proyección en baja dimensión para que esta representación sea lo más fiel posible.
+A diferencia de técnicas como t-SNE, que se basan en probabilidades de similitud y optimización de la divergencia KL, UMAP se asienta sobre un **marco teórico robusto derivado de la geometría riemanniana y la topología algebraica**. Esta base le confiere propiedades distintivas en términos de **velocidad, escalabilidad y una superior preservación de la estructura global** de los datos.
 
-## Conceptos Clave: Los Símplices
+## Idea general
+
+La potencia de UMAP radica en su suposición fundamental de que los datos de alta dimensión se encuentran aproximadamente sobre una **variedad (manifold) riemanniana** de baja dimensión. El objetivo principal del algoritmo es **preservar la estructura topológica** de esta variedad subyacente al proyectar los datos a un espacio de menor dimensionalidad. La teoría subyacente se expresa más fácilmente en el lenguaje de la topología y la teoría de categorías.
+
+A un alto nivel, UMAP logra esto utilizando **aproximaciones locales de la variedad**. Estas aproximaciones se "parchean" o unen a través de representaciones de **conjuntos simpliciales difusos** (fuzzy simplicial sets) para construir una representación topológica coherente de los datos en alta dimensión. Posteriormente, se construye una representación topológica similar en el espacio de baja dimensión. El algoritmo optimiza entonces la disposición de los puntos en el espacio de baja dimensión para **minimizar la entropía cruzada entre ambas representaciones topológicas**.
+
+La construcción de estas representaciones topológicas difusas se desglosa en dos problemas: 1. **Aproximar la variedad** sobre la que se asume que se encuentran los datos. 2. **Construir una representación de conjunto simplicial difuso** de la variedad aproximada.
+
+En última instancia, UMAP se puede entender, desde una perspectiva computacional, como la **construcción y operación sobre grafos ponderados**, situándolo en la clase de algoritmos de aprendizaje basados en $k$-vecinos (como Laplacian Eigenmaps, Isomap y t-SNE). Las diferencias entre estos algoritmos residen en los detalles de cómo se construye el grafo y cómo se calcula su disposición en baja dimensión.
+
+### Distribución Uniforme de Datos en una Variedad y Aproximación Geodésica
+
+El primer paso crucial en UMAP es aproximar la variedad subyacente. Se asume que los datos están **distribuidos uniformemente** en esta variedad con respecto a una **métrica riemanniana** $g$ intrínseca a la misma, no necesariamente la métrica euclidiana del espacio ambiente. Aunque los datos reales rara vez se comportan así, UMAP aborda esto de manera ingeniosa: **adapta la métrica localmente** para que los datos *parezcan* uniformemente distribuidos.
+
+ormalmente, para cada punto $x_i$, UMAP normaliza las distancias a sus vecinos con respecto a la distancia a su $k$-ésimo vecino más cercano, denotada $\rho_i$. Esto se basa en el **Lema 1** (discutido en el paper), que establece que, bajo ciertas condiciones de un *manifold* Riemanniano $(M,g)$, en una bola $B$ con respecto a $g$ centrada en un punto $p \in M$, la distancia geodésica de $p$ a cualquier $q \in B$ es proporcional a la distancia euclidiana en el espacio ambiente $d_{\mathbb{R}^n}(p,q)$, escalada por el radio de la bola $r$:
+
+$$\frac{1}{r} d_{\mathbb{R}^n}(p,q)$$
+
+La implicación práctica es que, al crear una **distancia personalizada para cada** $x_i$ (normalizando por $\rho_i$), se asegura que la suposición de distribución uniforme en la variedad sea válida localmente. El "costo" es que se generan **nociones de distancia locales e independientes** para cada punto, que pueden no ser directamente compatibles entre sí. La tarea siguiente es fusionar estos "espacios métricos discretos" locales en una estructura global consistente.
+
+-   Un **simplex** es una generalización de elementos geométricos básicos: un punto es un 0-simplex, una arista es un 1-simplex, un triángulo es un 2-simplex, etc. Un **conjunto simplicial** es una colección de estos simplices que se conectan entre sí para formar una representación discreta de una forma o espacio topológico.
+-   El término "**difuso**" (fuzzy) significa que las conexiones entre los simplices no son binarias (existe/no existe), sino que tienen un **grado de membresía o probabilidad** (un valor en el intervalo $[0, 1]$). Esto permite capturar la incertidumbre y la gradualidad en las relaciones de vecindad de los datos, lo que es crucial para manejar la complejidad de la alta dimensionalidad y permite la combinación de las métricas locales inconsistentes en una estructura global.
+
+Computacionalmente, aunque la teoría habla de conjuntos simpliciales difusos completos, en la práctica UMAP trabaja con el **"one skeleton"** de estos conjuntos, lo que se traduce directamente en un **grafo ponderado**. En este grafo: \* Cada punto de datos $x_i$ es un **nodo**. \* Cada **arista** entre $x_i$ y $x_j$ tiene un **peso** que representa la "fuerza" o "probabilidad" de conexión entre ellos.
+
+### Representación de la Variedad con Conjuntos Simpliciales Difusos
+
+La forma en que UMAP unifica estas nociones locales es a través de los **conjuntos simpliciales difusos**.
+
+-   Un **simplex** es una generalización de elementos geométricos básicos: un punto es un 0-simplex, una arista es un 1-simplex, un triángulo es un 2-simplex, etc. Un **conjunto simplicial** es una colección de estos simplices que se conectan entre sí para formar una representación discreta de una forma o espacio topológico.
+-   El término "**difuso**" (fuzzy) significa que las conexiones entre los simplices no son binarias (existe/no existe), sino que tienen un **grado de membresía o probabilidad** (un valor en el intervalo $[0, 1]$). Esto permite capturar la incertidumbre y la gradualidad en las relaciones de vecindad de los datos, lo que es crucial para manejar la complejidad de la alta dimensionalidad y permite la combinación de las métricas locales inconsistentes en una estructura global.
+
+Computacionalmente, aunque la teoría habla de conjuntos simpliciales difusos completos, en la práctica UMAP trabaja con el **"one skeleton"** de estos conjuntos, lo que se traduce directamente en un **grafo ponderado**. En este grafo: \* Cada punto de datos $x_i$ es un **nodo**. \* Cada **arista** entre $x_i$ y $x_j$ tiene un **peso** que representa la "fuerza" o "probabilidad" de conexión entre ellos.
+
+
+## Simplicial Complexes
 
 Para comprender el fundamento de UMAP, es esencial introducir el concepto de **símplex**, que son los bloques de construcción elementales en la topología algebraica:
 
@@ -678,7 +580,7 @@ Para comprender el fundamento de UMAP, es esencial introducir el concepto de **s
 
 Esta jerarquía se extiende a dimensiones superiores. Un **complejo simplicial** es una colección de estos símplices que se interconectan de manera coherente, aproximando la forma topológica subyacente de los datos.
 
-### Tipos de Símplices
+### Tipos de símplex
 
 ![](./img/img1.webp)
 
@@ -692,13 +594,11 @@ Observemos un conjunto de datos bidimensional de ejemplo, una "onda sinusoidal r
 
 A diferencia de métodos que emplean un radio fijo para estos conjuntos abiertos, UMAP **adapta el tamaño de cada conjunto abierto** basándose en la densidad local de los datos.
 
-### Ilustración: Cubierta con Radios Fijos
+### Cubierta con Radios Fijos
 
 ![](./img/img3.webp)
 
-<figcaption>
-Esta figura (<code>img3.webp</code>) ilustra una cubierta generada con radios fijos. Se observa que esta aproximación es ineficaz para capturar la estructura local, ya que no se ajusta a las variaciones de densidad, resultando en coberturas inadecuadas en regiones dispersas y solapamientos excesivos en regiones densas.
-</figcaption>
+
 
 Una cubierta con un radio globalmente fijo puede llevar a una representación imprecisa de la topología local de la variedad.
 
@@ -717,34 +617,29 @@ Desglosemos los términos:
 *   $d(X_i, X_j)$: La **distancia euclidiana** (o la métrica seleccionada) entre $X_i$ y cada vecino $X_j$ en el espacio de alta dimensión.
 *   $\rho_i$ (rho): La **distancia al primer vecino no cero** de $X_i$, es decir, la distancia más pequeña a cualquier otro punto.
 *   $\sigma_i$ (sigma): El **parámetro de escala local** calculado para cada $X_i$. Un $\sigma_i$ pequeño indica una compresión efectiva de las distancias (región densa), mientras que un $\sigma_i$ grande indica un estiramiento (región dispersa).
-*   $\exp(\dots)$: La función exponencial. Transforma las distancias en "probabilidades de conexión", donde distancias menores resultan en probabilidades mayores.
 *   $\log_2(k)$: Un **valor objetivo constante**. Asegura que, en promedio, la suma de las probabilidades de conexión de los $k$ vecinos de $X_i$ sea $\log_2(k)$, normalizando la "conectividad efectiva" de cada punto.
 
 **Impacto:** Este procedimiento resulta en una **distribución uniforme local simulada**, garantizando que las vecindades de los puntos se comporten de manera consistente, independientemente de la densidad original de los datos.
 
-### Ilustración: Cubierta Adaptada por Densidad
+### Cubierta Adaptada por Densidad
 
 ![](./img/img6.webp)
 
-<figcaption>
-Esta figura muestra la onda sinusoidal con los conjuntos abiertos ajustados por la densidad. Los radios son menores en regiones densas y mayores en regiones dispersas, logrando una "cobertura uniforme" de la variedad en términos de conectividad local.
-</figcaption>
+
 
 ## La Métrica Adaptada: Visualizando la Uniformización Local
 
 El ajuste dinámico de $\sigma_i$ y $\rho_i$ produce una métrica localmente adaptada que hace que los puntos se "sientan" uniformemente distribuidos. Conceptualmente, esto puede visualizarse como una deformación del espacio alrededor de cada punto, donde las bolas de radios fijos se "estiran" o "comprimen" para lograr una densidad efectiva constante.
 
-### Ilustración: Espacio Métrico Adaptado
+### Espacio Métrico Adaptado
 
 ![](./img/img8.webp)
 
-<figcaption>
-Esta figura representa cómo UMAP ajusta dinámicamente las distancias entre los puntos (visualizado como el "estiramiento" o "compresión" de las regiones espaciales) para lograr una densidad efectiva uniforme en todo el espacio de datos. Los puntos en regiones más densas se "separan" efectivamente de sus vecinos, mientras que los puntos en regiones más dispersas se "acercan" artificialmente, nivelando la percepción de la densidad local.
-</figcaption>
+
 
 Este ajuste es fundamental para que el "Fuzzy Simplicial Set" final refleje con precisión la topología subyacente, independientemente de las variaciones de densidad intrínsecas del dataset original.
 
-## Construcción del Grafo Ponderado: El "Fuzzy Simplicial Set"
+## Fuzzy Simplicial Set
 
 Una vez que los parámetros de escala local ($\sigma_i$ y $\rho_i$) han sido determinados para cada punto, UMAP calcula los "scores de similaridad" entre cada punto $X_i$ y sus vecinos $X_j$. Estos scores representan la **fuerza de conexión** probabilística entre los puntos:
 
@@ -754,15 +649,13 @@ Aquí, $s_{ij}$ es el **score de similaridad** (o "probabilidad de conexión") d
 
 Estos scores se utilizan para construir un **grafo de conectividad ponderado global**. Cada punto de datos se convierte en un nodo del grafo, y las conexiones entre $X_i$ y $X_j$ son aristas con un peso $W_{ij}$. Este grafo se conceptualiza como un **Conjunto Simplicial Difuso (Fuzzy Simplicial Set)**.
 
-### Ilustración: Grafo de Conectividad
+### Grafo de Conectividad
 
 ![](./img/img4.webp)
 
-<figcaption>
-Esta figura muestra el complejo simplicial construido a partir de las conexiones (aristas) y posibles símplices de orden superior (regiones sombreadas) sobre la onda sinusoidal, representando la estructura topológica inferida.
-</figcaption>
 
-## La Propiedad "Fuzzy": Unificación de Conexiones Bidireccionales
+
+## Unión Difusa
 
 La característica "difusa" (fuzzy) de los Conjuntos Simpliciales radica en que las conexiones no son binarias (sí/no), sino que poseen un **grado de pertenencia** (un valor continuo entre 0 y 1). Para consolidar los scores $s_{ij}$ y $s_{ji}$ (ya que la similaridad de $X_i$ a $X_j$ puede diferir de $X_j$ a $X_i$ debido a sus $\sigma$ y $\rho$ individuales), UMAP emplea la siguiente fórmula:
 
@@ -778,7 +671,7 @@ Esta operación es una **"unión difusa"**. Es fundamental comprender que esta n
 
 Este grafo ponderado constituye la **aproximación topológica de la variedad** subyacente en el espacio de alta dimensión, capturando tanto las relaciones de proximidad como las características geométricas locales de una manera flexible y probabilística.
 
-## Producto Final: El Grafo de Conectividad en Alta Dimensión
+## Grafo de Conectividad en Alta Dimensión
 
 Como resultado de todos los pasos previos (adaptación métrica local, cálculo de scores de similaridad y unión difusa), el proceso de UMAP culmina en la construcción de un **grafo de conectividad ponderado** en el espacio de alta dimensión.
 
@@ -800,17 +693,13 @@ Este grafo ponderado puede ser convenientemente representado como una **matriz d
 | $P_4$ | 0.00  | 0.00  | 0.71  | 1.00  | 0.90  |
 | $P_5$ | 0.00  | 0.00  | 0.00  | 0.90  | 1.00  |
 
-<figcaption>
-Esta tabla ilustra una porción conceptual de la matriz de similaridad dispersa. Los valores entre 0 y 1 (donde 1.00 representa conectividad total y 0.00 ausencia de conectividad) indican la fuerza de la relación entre los puntos. Las entradas de 0.00 (o muy cercanas a cero) muestran la naturaleza dispersa de la matriz, donde solo los vecinos cercanos tienen un peso significativo.
-</figcaption>
 
-## De Alta a Baja Dimensión: El Proceso de Embedificación
+## Representación en Baja Dimensión
 
 Una vez que UMAP ha construido el **Conjunto Simplicial Difuso (Fuzzy Simplicial Set)** en el espacio de alta dimensión, que encapsula la estructura topológica y las similaridades probabilísticas ($W_{ij}$), el siguiente paso es encontrar una representación de estos datos en un espacio de menor dimensionalidad (e.g., $\mathbb{R}^2$ o $\mathbb{R}^3$).
 
 El objetivo es generar una incrustación $Y = \{y_1, \dots, y_N\} \subset \mathbb{R}^d$ (donde $d$ es la dimensión objetivo, típicamente 2 o 3) que sea topológicamente similar al grafo de alta dimensión. Esto se logra formulando un problema de optimización para preservar las **conectividades probabilísticas** establecidas en el espacio original. La meta es que si dos puntos $X_i$ y $X_j$ tienen una alta probabilidad de conexión $W_{ij}$ en alta dimensión, sus correspondientes incrustaciones $y_i$ y $y_j$ deben estar cerca en baja dimensión, y viceversa.
 
-## Modelado de la Similitud en Baja Dimensión: El Kernel de Cauchy
 
 Para cuantificar la "similaridad" o "conectividad" entre los puntos $y_i$ y $y_j$ en el espacio de baja dimensión, UMAP emplea una función de kernel específica, elegida por sus propiedades deseables para la optimización y la visualización:
 
@@ -825,7 +714,7 @@ Analicemos los componentes de esta fórmula y su propósito:
     *   `spread`: Este parámetro controla la dispersión de los puntos, influenciando la escala a la que se interpretan las distancias. Un `spread` más alto permite que los puntos se dispersen más ampliamente.
     *   Los valores de $a$ y $b$ se ajustan para que la curva de decaimiento de la conectividad en baja dimensión (`min_dist` y `spread`) se alinee lo mejor posible con la curva de decaimiento del espacio de alta dimensión ($\sigma_i$ y $\rho_i$), creando una correspondencia métrica.
 
-## El Problema de Optimización: Minimización de la Divergencia de Entropía Cruzada
+## Minimización de la Divergencia de Entropía Cruzada
 
 El corazón de la incrustación de UMAP reside en la minimización de la "divergencia" entre el grafo de conectividad en alta dimensión ($W_{ij}$) y el grafo en baja dimensión ($w_{ij}$). Esto se formula como la minimización de la **divergencia de la sección cruzada de la entropía (Cross-Entropy)**, una medida estándar para la diferencia entre dos distribuciones de probabilidad.
 
@@ -849,7 +738,7 @@ Donde:
 
 La minimización de esta función de costo guía el proceso de ajuste de las posiciones de los puntos en el espacio de baja dimensión, buscando una configuración óptima que preserve la topología probabilística del espacio original.
 
-## Algoritmo de Optimización: Descenso de Gradiente Estocástico (SGD)
+## Descenso de Gradiente Estocástico
 
 La minimización de la función de pérdida $L(Y)$ se realiza mediante un proceso iterativo de **Descenso de Gradiente Estocástico (Stochastic Gradient Descent - SGD)**.
 
@@ -1135,49 +1024,19 @@ Ambas t-SNE y UMAP son herramientas poderosas para la reducción de dimensionali
 | **Concepto de Similitud**          | Probabilidades de similitud $p_{ij}$ (basadas en Gaussianas) en alta dimensión y $q_{ij}$ (basadas en t-Student) en baja dimensión.                                                                    | Conectividad en un grafo ponderado (fuzzy simplicial set) que representa la proximidad. La noción de "vecino" es localmente adaptable.                                                                                                                 |
 | **Preservación de Estructura**     | **Excelente para la estructura local (clusters).** Tiende a aglomerar puntos cercanos y separarlos bien. A menudo **distorsiona la estructura global** (las distancias entre clusters no son fiables). | **Excelente para estructura local Y global.** Busca preservar tanto los clusters como las relaciones entre ellos. Es más probable que las distancias entre clusters tengan significado.                                                                |
 | **Función de Costo**               | Divergencia Kullback-Leibler (KL) asimétrica: $\text{KL}(P || Q)$. Penaliza fuertemente la pérdida de vecinos cercanos.                                                                                | Inspirada en la entropía cruzada binaria, optimizada para la correspondencia de grafos: $\sum [w \log(w/q) + (1-w) \log((1-w)/(1-q))]$.                                                                                                                |
-| **Distribución en Baja Dimensión** | Distribución t-Student con 1 grado de libertad (Cauchy). Sus colas pesadas resuelven el "problema de hacinamiento".                                                                                    | Función de conectividad personalizada \$ (1 + a\|y_i - y_j\|^{2b})^{-1} \$. Parametros `min_dist` y `spread` controlan su forma para influir en la dispersión.                                                                                         |
+| **Distribución en Baja Dimensión** | Distribución t-Student con 1 grado de libertad (Cauchy). Sus colas pesadas resuelven el "problema de hacinamiento".                                                                                    | Función de conectividad personalizada $\ (1 + a\|y_i - y_j\|^{2b})^{-1} \$. Parametros `min_dist` y `spread` controlan su forma para influir en la dispersión.                                                                                         |
 | **Velocidad y Escalabilidad**      | **Generalmente lento.** Su complejidad es $O(N^2)$ (o $O(N \log N)$ con optimizaciones como la del árbol de Barnes-Hut). No es ideal para datasets con más de \~50,000 puntos.                         | **Significativamente más rápido.** Su complejidad es $O(N \log N)$ para la construcción del grafo y luego $O(N)$ para la optimización. Puede manejar datasets de millones de puntos.                                                                   |
 | **Reproductibilidad**              | Muy sensible a los parámetros (`perplexity`, `learning_rate`, `init`). Ejecuciones repetidas con diferentes `random_state` pueden producir visualizaciones notablemente diferentes.                    | Generalmente más robusto a los cambios de parámetros y más consistente en la estructura global resultante entre ejecuciones.                                                                                                                           |
 | **Parámetros Clave**               | `perplexity` (número de "vecinos efectivos"), `learning_rate` (tasa de aprendizaje).                                                                                                                   | `n_neighbors` (número de vecinos para construir el grafo inicial), `min_dist` (separación mínima entre puntos proyectados), `spread` (escala de los clusters), `metric` (métrica de distancia).                                                        |
 | **Forma de los Clusters**          | Tiende a producir clusters más densos y circulares, a veces con puntos aglomerados en el centro del mapa.                                                                                              | Puede producir clusters con formas más diversas y una mejor separación visual, reflejando mejor la estructura intrínseca de los datos.                                                                                                                 |
 | **Aplicaciones Típicas**           | Excelente para la visualización de datos de transcriptómica (ej. single-cell RNA-seq), imágenes, texto. Muy bueno para identificar subpoblaciones distintas.                                           | Ampliamente utilizado en biología (ej. single-cell), visualización de embeddings de procesamiento del lenguaje natural (NLP), análisis de imágenes grandes. A menudo es la opción preferida por su equilibrio entre velocidad y calidad del embedding. |
 
-### Enfoques Distintivos en la Práctica:
 
--   **t-SNE como "Microscopio Local":** t-SNE se comporta como un "microscopio" que se enfoca en las relaciones locales y los detalles finos de los clusters. Es excelente para identificar subgrupos dentro de sus datos. Sin embargo, no siempre garantiza que los grupos que están muy separados en el gráfico también lo estén en el espacio de alta dimensión, ni que el tamaño de los grupos sea proporcional a su número de puntos.
-
--   **UMAP como "Mapa Global":** UMAP, al basarse en una aproximación de la topología del manifold, busca preservar las conexiones tanto locales como globales. Esto significa que las distancias relativas entre los clusters en el mapa de UMAP suelen ser más significativas que en t-SNE. UMAP es más adecuado cuando se desea comprender la estructura general del conjunto de datos, las relaciones entre los grandes grupos y la forma general de la "nube" de datos.
-
-En resumen, la elección entre t-SNE y UMAP a menudo depende del objetivo específico de la visualización y las características del dataset. Para conjuntos de datos grandes y para una comprensión tanto local como global, UMAP es generalmente preferible. Para un enfoque profundo en la separación de clusters locales en datasets de tamaño moderado, t-SNE sigue siendo una excelente herramienta.
-
-# Autoencoders (en veremos)
-
-## Fundamentos Teóricos
-
-Los Autoencoders son una clase de redes neuronales artificiales utilizadas para el aprendizaje no supervisado de representaciones. La arquitectura básica consta de dos partes principales:
-
-1.  **Codificador (Encoder):** Una red neuronal que transforma los datos de entrada de alta dimensión en una representación de menor dimensión (código o embedding).
-2.  **Decodificador (Decoder):** Una red neuronal que reconstruye los datos originales a partir del código de baja dimensión.
-
-![Esquema de un Autoencoder](img/autoencoder.png)
-
-La idea es que el autoencoder aprenda a reconstruir los datos de entrada a partir de la representación latente. La representación latente es una representación de los datos de entrada que es más fácil de procesar y que captura la información más importante de los datos.Esto es lo que se proyecta en el espacio de baja dimensión.
-
-## Proceso de Aprendizaje
-
-El entrenamiento de un autoencoder sigue estos pasos:
-
-1.  **Codificación:** Los datos de entrada $x$ pasan a través del encoder, produciendo una representación latente $z$: $$z = f_\theta(x)$$ donde $f_\theta$ es la función del encoder con parámetros $\theta$.
-
-2.  **Decodificación:** La representación latente $z$ pasa a través del decoder, produciendo una reconstrucción $\hat{x}$: $$\hat{x} = g_\phi(z)$$ donde $g_\phi$ es la función del decoder con parámetros $\phi$.
-
-3.  **Optimización:** Los parámetros $\theta$ y $\phi$ se optimizan para minimizar el error de reconstrucción: $$\mathcal{L}(x, \hat{x}) = \|x - \hat{x}\|^2$$
 
 # Implementación en el dataset MNIST
 
 En esta sección, aplicaremos tanto t-SNE como UMAP al dataset de dígitos de Scikit-learn y analizaremos los resultados, comparando las visualizaciones y las métricas de calidad de las proyecciones.
 
-## Preparación del Entorno y Carga de Datos
 
 ```{python}
 #| label: load-data
@@ -1188,8 +1047,6 @@ digits = datasets.load_digits(n_class=10)
 X = digits.data  
 y = digits.target 
 
-print(f"Dimensiones de los datos de las imágenes (X): {X.shape}")
-print(f"Dimensiones de las etiquetas de las clases (y): {y.shape}")
 ```
 
 ## Representación de Imágenes como Matrices
@@ -1455,6 +1312,9 @@ En esta sección, aplicaremos UMAP al dataset de dígitos MNIST usando scikit-le
 
 
 ```{python}
+#| label: umap-optimization-process
+#| output: asis
+
 def plot_umap_optimization_process(X, y, n_steps=6):
     """Visualiza el proceso de optimización de UMAP en diferentes iteraciones."""
     
@@ -1504,8 +1364,8 @@ def plot_umap_optimization_process(X, y, n_steps=6):
 
 
 ```{python}
-
-
+#| label: charts-umap
+#| output: asis
     plot_umap_optimization_process(X, y)
     plot_umap_convergence_metrics(X, y)
     plot_umap_hyperparameter_effects(X, y)
@@ -1540,21 +1400,6 @@ La capacidad de UMAP para proyectar nuevos datos se deriva de su proceso de entr
     $$w_{\text{new},ij} = \frac{1}{1 + a(d(y_{\text{new},i}, y_j))^ {2b}}$$
 
 Este proceso es computacionalmente eficiente porque solo se optimiza la posición de los nuevos puntos, sin alterar el embedding ya existente del conjunto de entrenamiento. Esto permite una proyección consistente y escalable de datos no vistos.
-
-A continuación, demostraremos esta capacidad dividiendo el dataset MNIST en conjuntos de entrenamiento y prueba y visualizando sus proyecciones UMAP por separado.
-
-
-1.  **Entrenamiento:** Se entrena el modelo UMAP exclusivamente con el conjunto de entrenamiento (`X_train`). Durante esta fase, UMAP aprende la estructura topológica y la función de transformación.
-2.  **Transformación de nuevos datos:** La función `transform()` del modelo UMAP entrenado se aplica tanto al conjunto de entrenamiento (`X_train`) como al conjunto de prueba (`X_test`). Esto asegura que tanto los datos de entrenamiento como los de prueba se proyecten en el mismo espacio de baja dimensión, manteniendo la coherencia en la visualización y el análisis posterior.
-
-Esta capacidad permite:
-
-*   **Evaluación realista:** Permite evaluar el rendimiento de los modelos de aprendizaje automático en el espacio de baja dimensión utilizando datos no vistos, lo cual es fundamental para una evaluación imparcial.
-*   **Implementación en producción:** Una vez entrenado, el modelo UMAP puede ser guardado y reutilizado para proyectar nuevos datos en tiempo real, lo que lo hace adecuado para sistemas de producción.
-
-En contraste, t-SNE no aprende explícitamente una función de mapeo. Cada vez que se aplica t-SNE, calcula las probabilidades de similitud desde cero y minimiza una función de costo que no es trivialmente separable en una función de transformación para datos nuevos. Esto limita su utilidad en pipelines de entrenamiento/prueba donde se requiere una proyección consistente para datos no vistos.
-
-A continuación, demostraremos esta capacidad dividiendo el dataset MNIST en conjuntos de entrenamiento y prueba y visualizando sus proyecciones UMAP por separado.
 
 ```{python}
 #| label: umap-prediction
@@ -1611,19 +1456,7 @@ plt.show()
 
 ## Predicción de Dígitos con Árboles de Decisión
 
-Para complementar el análisis de reducción de dimensionalidad, es útil demostrar cómo los datos proyectados o el dataset original pueden ser utilizados en tareas de clasificación. Aquí, emplearemos un **Árbol de Decisión** para predecir los dígitos del dataset MNIST.
-
-
-
-El proceso será el siguiente:
-
-1.  **Entrenamiento:** Entrenaremos un `DecisionTreeClassifier` con el conjunto de entrenamiento (`X_train`, `y_train`).
-2.  **Predicción:** Utilizaremos el modelo entrenado para realizar predicciones sobre el conjunto de prueba (`X_test`).
-3.  **Evaluación:** Evaluaremos el rendimiento del modelo utilizando métricas de clasificación como la precisión, el recall y el F1-score, presentadas en un reporte de clasificación.
-
-Esta demostración ilustrará cómo la preparación de datos (incluso sin reducción de dimensionalidad explícita previa) permite aplicar modelos de aprendizaje automático directamente.
-
-
+Para complementar el análisis de reducción de dimensionalidad, es útil demostrar cómo los datos proyectados o el dataset original pueden ser utilizados en tareas de clasificación. 
 
 ### Resultados
 
