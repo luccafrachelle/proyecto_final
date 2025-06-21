@@ -13,8 +13,9 @@ background-transition: fade
 format:
   revealjs: 
     theme: white
-    slide-number: true
-    show-slide-number: print
+    slide-number: c
+    show-slide-number: all
+    hash: true
 fontsize: 20pt
 
 ---
@@ -700,6 +701,17 @@ Estos parámetros permiten al usuario ajustar el equilibrio entre la preservaci�
     donde $w_{\text{new},ij}$ es la probabilidad de conexión en baja dimensión entre $y_{\text{new},i}$ y $y_j$, calculada con el kernel de Cauchy:
     $$w_{\text{new},ij} = \frac{1}{1 + a(d(y_{\text{new},i}, y_j))^ {2b}}$$
 
+# Comparativa t-SNE vs UMAP {.smaller}
+Ambas t-SNE y UMAP son herramientas poderosas para la reducción de dimensionalidad no lineal y la visualización.
+
+| Característica                 | t-SNE                                                              | UMAP                                                                        |
+|:-------------------------------|:-------------------------------------------------------------------|:----------------------------------------------------------------------------|
+| **Preservación de Estructura** | Excelente para estructura local; distorsiona la global.            | Excelente para estructura local y global; distancias entre clusters significativas. |
+| **Velocidad y Escalabilidad**  | Generalmente lento ($O(N^2)$); puede ser $O(N \log N)$ con optimizaciones (ej. Barnes-Hut); no ideal para datasets grandes.     | Significativamente más rápido. Su complejidad es $O(N \log N)$ para la construcción del grafo y luego $O(N)$ para la optimización. Puede manejar datasets de millones de puntos. |
+| **Reproductibilidad**          | Muy sensible a parámetros; visualizaciones pueden variar.          | Más robusto y consistente entre ejecuciones.                                |
+| **Forma de los Clusters**      | Tiende a producir clusters densos y circulares.                    | Puede producir clusters con formas diversas y mejor separación visual.      |
+| **Nuevos Datos**               | No aprende función de mapeo; no proyecta nuevos datos sin reentrenar. | Aprende función de mapeo; puede transformar eficientemente nuevos datos.   |
+
 # Aplicaciones
 
 ## t-SNE
@@ -1194,3 +1206,76 @@ ax2.legend(title="Dígito", bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()
 plt.show()
 ```
+
+## Predicción de dígitos con UMAP como preprocesamiento
+
+
+```{python}
+#| label: decision-tree-prediction-umap-results
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import classification_report
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# --- 2. Simple Decision Tree Implementation ---
+dtree_classifier_simple = DecisionTreeClassifier(random_state=42)
+dtree_classifier_simple.fit(X_train, y_train)
+y_pred_simple = dtree_classifier_simple.predict(X_test)
+
+report_simple_dict = classification_report(
+    y_test, y_pred_simple,
+    target_names=[str(i) for i in range(10)],
+    output_dict=True
+)
+# Extract only per-digit F1-scores (or 'precision'/'recall' if preferred)
+df_metrics_simple_per_digit = pd.DataFrame(report_simple_dict).transpose().drop(
+    ['f1-score', 'macro avg', 'weighted avg'], errors='ignore'
+)
+
+
+dtree_classifier_umap = DecisionTreeClassifier(random_state=42)
+umap_model = UMAP(n_components=2, n_neighbors=15, min_dist=0.1, n_epochs=1000, random_state=42)
+
+X_train_umap = umap_model.fit_transform(X_train)
+dtree_classifier_umap.fit(X_train_umap, y_train)
+
+X_test_umap = umap_model.transform(X_test)
+y_pred_umap = dtree_classifier_umap.predict(X_test_umap)
+
+report_umap_dict = classification_report(
+    y_test, y_pred_umap,
+    target_names=[str(i) for i in range(10)],
+    output_dict=True
+)
+
+df_metrics_umap_per_digit = pd.DataFrame(report_umap_dict).transpose().drop(
+    ['f1-score', 'macro avg', 'weighted avg'], errors='ignore'
+)
+
+
+# --- Generate the Per-Digit Comparison Plot (using F1-score as 'accuracy per digit') ---
+plt.figure(figsize=(12, 7)) # Adjust figure size
+
+# Prepare data for plotting
+# Using 'f1-score' as the representative "accuracy" for each digit
+plot_data_simple = df_metrics_simple_per_digit[['f1-score']].reset_index().rename(columns={'index': 'Digit', 'f1-score': 'Value'})
+plot_data_simple['Model'] = 'Simple DT'
+
+plot_data_umap = df_metrics_umap_per_digit[['f1-score']].reset_index().rename(columns={'index': 'Digit', 'f1-score': 'Value'})
+plot_data_umap['Model'] = 'DT + UMAP'
+
+# Combine dataframes for plotting with hue
+combined_plot_data = pd.concat([plot_data_simple, plot_data_umap])
+
+# Create the bar plot
+sns.barplot(x='Digit', y='Value', hue='Model', data=combined_plot_data, palette='viridis')
+plt.ylim(0, 1.05) # Extend y-axis slightly above 1 for better visual
+plt.title('F1-Score Per Digit: Simple DT vs. DT + UMAP Comparison')
+plt.xlabel('Digit')
+plt.ylabel('F1-Score') # Labeled as F1-Score, representing per-digit accuracy
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.legend(title='Model', loc='lower right') # Adjust legend position for clarity
+
+plt.tight_layout()
+plt.show()
+```
+
