@@ -497,11 +497,6 @@ A diferencia de métodos que emplean un radio fijo para estos conjuntos abiertos
 
 ## Cubierta con Radios Fijos
 ![](./img/img3.webp){fig-align="center"}
-<figcaption>
-Esta figura (<code>img3.webp</code>) ilustra una cubierta generada con radios fijos. Se observa que esta aproximación es ineficaz para capturar la estructura local, ya que no se ajusta a las variaciones de densidad, resultando en coberturas inadecuadas en regiones dispersas y solapamientos excesivos en regiones densas.
-</figcaption>
-
-Una cubierta con un radio globalmente fijo puede llevar a una representación imprecisa de la topología local de la variedad.
 
 ---
 
@@ -1272,3 +1267,8 @@ plt.tight_layout()
 plt.show()
 ```
 
+# APP
+
+![](img/qr-code.png)
+
+# GRACIAS
