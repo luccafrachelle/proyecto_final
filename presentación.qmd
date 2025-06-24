@@ -6,6 +6,7 @@ fig-align: center
 warning: false
 message: false
 echo: false
+eval: true
 embed-resources: true
 mainfont: Arial
 sansfont: Arial
@@ -619,41 +620,33 @@ Analicemos los componentes de esta fórmula y su propósito:
 ## Función de costos
 
 La función objetivo que UMAP busca minimizar es:
-$$L(Y) = \sum_{i \neq j} \left[ W_{ij} \log\left(\frac{W_{ij}}{w_{ij}}\right) + (1 - W_{ij}) \log\left(\frac{1 - W_{ij}}{1 - w_{ij}}\right) \right]$$
+
+$$C_{UMAP} = \sum_{i \neq j} \left[ v_{ij} \log\left(\frac{v_{ij}}{w_{ij}}\right) + (1 - v_{ij}) \log\left(\frac{1 - v_{ij}}{1 - w_{ij}}\right) \right]$$
 
 Donde:
 
-* $W_{ij}$: La **probabilidad de conexión** entre $X_i$ y $X_j$ en el espacio de **alta dimensión** (un valor entre 0 y 1).
-
-* $w_{ij}$: La **probabilidad de conexión** entre $y_i$ y $y_j$ en el espacio de **baja dimensión** (calculada con el kernel de Cauchy).
-
-1.  **Término de Atracción (primer término):** $W_{ij} \log\left(\frac{W_{ij}}{w_{ij}}\right)$
-
-2.  **Término de Repulsión (segundo término):** $(1 - W_{ij}) \log\left(\frac{1 - W_{ij}}{1 - w_{ij}}\right)$
+* $v_{ij}$: Probabilidad de conexión entre los puntos $X_i$ y $X_j$ en **alta dimensión** (grafo de vecinos).
+* $w_{ij}$: Probabilidad de conexión entre los puntos $y_i$ y $y_j$ en **baja dimensión** (embedding).
 
 
----
 
-## Descenso de Gradiente Estocástico 
 
-1.  **Inicialización del Embedding:**
-    * Para acelerar la convergencia y proporcionar un punto de partida razonable, los puntos $y_i$ en el espacio de baja dimensión se inicializan comúnmente utilizando una **incrustación espectral** (e.g., basada en los vectores propios del Laplaciano normalizado del grafo de conectividad de alta dimensión). Alternativamente, se puede usar una inicialización aleatoria.
+## Descenso de Gradiente Estocástico{.smaller}
 
-2.  **Muestreo de Aristas y No-Aristas:**
-    * En cada iteración del SGD, se selecciona aleatoriamente una arista (un par $(i, j)$ con $W_{ij} > 0$) de la matriz de similaridad en alta dimensión. Para este par, se aplica una **fuerza de atracción** a $y_i$ y $y_j$.
-    * Para la repulsión, UMAP emplea **muestreo negativo**. En lugar de considerar todos los pares no conectados (lo que sería computacionalmente inviable para grandes datasets, $O(N^2)$), se muestrean aleatoriamente varios puntos $y_k$ que no están conectados a $y_i$. Para estos pares $(i, k)$, se aplica una **fuerza de repulsión**. La proporción de muestras negativas por muestra positiva es un parámetro configurable.
+La optimización de la incrustación $Y$ se realiza mediante **Descenso de Gradiente Estocástico (SGD)**. El proceso sigue un bucle iterativo que ajusta las posiciones de los puntos simulando un sistema de fuerzas. El algoritmo, en esencia, hace lo siguiente:
 
-## Descenso de Gradiente Estocástico 
+Por cada **eje** $(i, j)$ con peso $v_{ij}$ que conecta a dos vecinos en el grafo de alta dimensión:
 
-3.  **Cálculo de Gradientes y Actualización de Posiciones:**
-    * Se calculan las derivadas parciales de la función de pérdida $L$ con respecto a las coordenadas de los puntos $y_i$ y $y_j$.
-    * Estas gradientes determinan la dirección y magnitud del ajuste de las posiciones de los puntos.
-    * Las posiciones de los puntos se actualizan iterativamente: $y_k \leftarrow y_k - \eta \nabla_{y_k} L$, donde $\eta$ es la tasa de aprendizaje.
+1.  **Muestreo de Atracción (Ejes Positivos):** Se realiza un "sorteo". Con una probabilidad igual al peso del eje ($v_{ij}$), se decide si se procesará este eje en la iteración actual. Los ejes más fuertes (puntos más similares) se eligen con más frecuencia.
 
-4.  **Annealing y Convergencia:**
-    * El proceso de optimización se ejecuta durante un número predefinido de épocas (`n_epochs`).
-    * A menudo, las fuerzas repulsivas se ponderan más fuertemente al inicio de la optimización para asegurar que los puntos se dispersen adecuadamente y no queden atrapados en mínimos locales apretados. A medida que avanza la optimización, el equilibrio entre atracción y repulsión se ajusta para permitir que las agrupaciones se refinen.
+2.  **Si el eje es seleccionado, se aplican dos fuerzas secuencialmente:**
+    *   **a) Fuerza de Atracción:** Se aplica una fuerza para acercar las representaciones $y_i$ y $y_j$ en el mapa. La actualización mueve $y_i$ en la dirección que maximiza su similitud ($w_{ij}$):
+        $$y_i \leftarrow y_i + \alpha \cdot \nabla_{y_i}(\log(w_{ij}))$$
 
+    *   **b) Fuerza de Repulsión (Muestreo Negativo):** Inmediatamente después, para evitar que los puntos se aglomeren, se aplica una fuerza contraria. El algoritmo elige uno o más puntos $k$ al azar del dataset (estos son los "ejemplos negativos") y aplica una fuerza que aleja a $y_i$ de cada $y_k$:
+        $$y_i \leftarrow y_i + \alpha \cdot \nabla_{y_i}(\log(1 - w_{ik}))$$
+
+Este ciclo de **muestreo-atracción-repulsión** se repite a lo largo de muchas épocas. Con cada época, la tasa de aprendizaje $\alpha$ disminuye, permitiendo que el sistema se asiente en un equilibrio estable. El resultado final es un mapa de baja dimensión donde la estructura topológica de los datos originales queda preservada.
 
 ## Hiperparámetros
 
