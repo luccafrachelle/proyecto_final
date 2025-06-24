@@ -747,7 +747,7 @@ def plot_optimization_process(X, y, n_steps=6):
                    init='random',
                    random_state=42,
                    perplexity=30,
-                   n_iter=iter)
+                   n_iter=iter)#max_iter según la versión de python
         
         Y = tsne.fit_transform(X)
         
