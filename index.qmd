@@ -1348,7 +1348,7 @@ def plot_umap_optimization_process(X, y, n_steps=6):
                           c=[DIGIT_COLORS[digit]], 
                           label=f'{digit}' if i == 0 else "")
             
-            ax.set_title(f'Interación: {n_epochs}', fontsize=12, fontweight='bold')
+            ax.set_title(f'Iteración: {n_epochs}', fontsize=12, fontweight='bold')
             ax.set_xlabel('UMAP 1', fontsize=10)
             ax.set_ylabel('UMAP 2', fontsize=10)
             ax.set_aspect('equal')
